@@ -1,4 +1,5 @@
 import React, { Suspense, lazy } from 'react';
+import useKeepAlive from './hooks/useKeepAlive';
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { SocketProvider } from './context/SocketContext';
@@ -55,6 +56,7 @@ function GuestOnly() {
 }
 
 export default function App() {
+  useKeepAlive(); // prevents Render free tier from sleeping
   return (
     <AuthProvider>
       <SocketProvider>

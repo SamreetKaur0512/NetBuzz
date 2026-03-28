@@ -145,9 +145,15 @@ function ReplyRow({ reply, postId, commentId, postOwnerId, onDeleteSelf, level =
     }
   };
 
-  /* Called by a child ReplyRow after it already deleted itself via API - just update state */
-  const handleDeleteSubReply = (subReplyId) => {
-    setSubReplies(prev => prev.filter(r => r._id?.toString() !== subReplyId?.toString()));
+  /* Delete a sub-reply that lives inside this reply (API handles any depth) */
+  const handleDeleteSubReply = async (subReplyId) => {
+    try {
+      await postAPI.deleteReply(postId, commentId, subReplyId);
+      setSubReplies(prev => prev.filter(r => r._id !== subReplyId));
+    } catch (err) {
+      console.error(err);
+      toast.error('Could not delete reply');
+    }
   };
 
   return (
@@ -185,7 +191,7 @@ function ReplyRow({ reply, postId, commentId, postOwnerId, onDeleteSelf, level =
               <button style={S.deleteBtn} onClick={async () => {
                 try {
                   await postAPI.deleteReply(postId, commentId, reply._id);
-                  onDeleteSelf(reply._id?.toString());
+                  onDeleteSelf(reply._id);
                 } catch (err) {
                   console.error(err);
                   toast.error('Could not delete reply');
@@ -320,9 +326,15 @@ function CommentRow({ comment, postId, postOwnerId, onDeleteComment }) {
     }
   };
 
-  /* Called by a child ReplyRow after it already deleted itself via API - just update state */
-  const handleDeleteReply = (replyId) => {
-    setReplies(prev => prev.filter(r => r._id?.toString() !== replyId?.toString()));
+  /* Delete a top-level reply under this comment */
+  const handleDeleteReply = async (replyId) => {
+    try {
+      await postAPI.deleteReply(postId, comment._id, replyId);
+      setReplies(prev => prev.filter(r => r._id !== replyId));
+    } catch (err) {
+      console.error(err);
+      toast.error('Could not delete reply');
+    }
   };
 
   return (
@@ -508,7 +520,7 @@ export default function PostCard({ post, onUpdate }) {
       {/* ── Media ── */}
       {post.mediaUrl && (
         post.mediaType === 'video'
-          ? <video src={mediaUrl} controls style={{ width: '100%', display: 'block', maxHeight: 520, background: '#f0f2f8' }} />
+          ? <video src={mediaUrl} controls playsInline style={{ width: '100%', display: 'block', maxHeight: 520, objectFit: 'contain', background: '#f0f2f8' }} />
           : <img src={mediaUrl} alt="post" style={{ width: '100%', display: 'block' }} />
       )}
 

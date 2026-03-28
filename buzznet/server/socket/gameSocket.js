@@ -202,19 +202,39 @@ function registerGameSocket(gameNS) {
         if (!roomCode) throw new Error("roomCode required");
 
         const room = await GameRoom.findOne({ roomCode });
-        if (!room)                         throw new Error("Room not found");
-        if (room.status !== "waiting")     throw new Error("Game already started or finished");
+        if (!room) throw new Error("Room not found");
+
+        // Check if this user is already a player in this room
+        const alreadyIn = room.players.some((p) => p.userId.toString() === userId);
+
+        // If game is in progress or finished, only allow existing players to rejoin (reconnect)
+        if (room.status !== "waiting") {
+          if (alreadyIn) {
+            // Existing player reconnecting mid-game — restore their socket session
+            socket.join(roomCode);
+            socket.roomCode = roomCode;
+            if (typeof ack === "function") ack({
+              success: true,
+              alreadyIn: true,
+              status: room.status,
+              room: { roomCode, players: room.players, gameType: room.gameType, maxPlayers: room.maxPlayers, totalQuestions: room.totalQuestions, questionTimeLimit: room.questionTimeLimit, hostId: room.hostId },
+            });
+          } else {
+            if (typeof ack === "function") ack({ success: false, message: "Game already started or finished" });
+          }
+          return;
+        }
+
         if (room.players.length >= room.maxPlayers) throw new Error("Room is full");
 
-        // Prevent duplicate join
-        const alreadyIn = room.players.some((p) => p.userId.toString() === userId);
         if (alreadyIn) {
-          // Already in room — just rejoin the socket room and return current state
+          // Already in room waiting — just rejoin the socket room and return current state
           socket.join(roomCode);
           socket.roomCode = roomCode;
           if (typeof ack === "function") ack({
             success: true,
             alreadyIn: true,
+            status: room.status,
             room: { roomCode, players: room.players, gameType: room.gameType, maxPlayers: room.maxPlayers, totalQuestions: room.totalQuestions, questionTimeLimit: room.questionTimeLimit, hostId: room.hostId },
           });
           return;

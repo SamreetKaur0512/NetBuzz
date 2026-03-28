@@ -125,7 +125,6 @@ export default function GameRoom() {
         joinedSuccessfully.current = true;
         // Immediately update players from ack — name shows instantly
         if (res.room?.players) {
-          // Deduplicate in case of any race
           const seen = new Set();
           setPlayers(res.room.players.filter(p => {
             const id = (p.userId?._id || p.userId)?.toString();
@@ -133,8 +132,12 @@ export default function GameRoom() {
             seen.add(id); return true;
           }));
         }
-      } else if (res.message !== 'Room is full') {
-        // Only show if HTTP load didn't already show this error
+        // If rejoining an already-started game, restore the in_progress state
+        // so the UI shows the game is running (not the waiting lobby)
+        if (res.status === 'in_progress') {
+          setGameState('in_progress');
+        }
+      } else if (res.message && res.message !== 'Room is full' && res.message !== 'Game already started or finished') {
         if (!roomErrorShown.current) {
           roomErrorShown.current = true;
           toast.error(res.message);

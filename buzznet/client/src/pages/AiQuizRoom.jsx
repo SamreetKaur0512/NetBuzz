@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Avatar, toast } from '../components/ui';
 
+const SERVER = process.env.REACT_APP_SERVER_URL || 'http://localhost:5000';
+
 // Server-side proxy — API key stays safe on server
 async function callGemini(prompt, maxTokens = 2000) {
   const token = localStorage.getItem('token');
-  const res = await fetch('/api/ai/chat', {
+  const res = await fetch(`${SERVER}/api/ai/chat`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -163,7 +165,7 @@ export default function AiQuizRoom({ room, roomCode, players: initPlayers, gameS
   // ── Server-side AI proxy ────────────────────────────────────────────────────
   const callAI = async (prompt, maxTokens = 2000) => {
     const token = localStorage.getItem('token');
-    const res = await fetch('/api/ai/chat', {
+    const res = await fetch(`${SERVER}/api/ai/chat`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

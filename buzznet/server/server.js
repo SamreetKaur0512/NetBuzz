@@ -92,7 +92,7 @@ app.use(sanitizeInputs); // blocks MongoDB $ operator injection only
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // ─── REST Routes ──────────────────────────────────────────────────────────────
-app.use("/api/auth",     authLimiter,    authRoutes);
+app.use("/api/auth",     authRoutes);   // per-route limiters defined in routes/auth.js
 app.use("/api/users",    generalLimiter, userRoutes);
 app.use("/api/posts",    postLimiter,    postRoutes);
 app.use("/api/chat",     chatRoutes);
