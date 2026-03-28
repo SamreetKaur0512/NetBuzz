@@ -10,14 +10,7 @@ require("dotenv").config();
 const { authLimiter, postLimiter, generalLimiter } = require("./middleware/rateLimit");
 const { sanitizeInputs } = require("./middleware/sanitize");
 
-// ─── Allowed Origins List ─────────────────────────────────────────────────────
-// Isme localhost aur aapki Vercel site dono hain
-const allowedOrigins = [
-  "http://localhost:3000",
-  "https://net-buzz.vercel.app"
-];
-
-// ─── Simple Security Headers ──────────────────────────────────────────────────
+// ─── Simple Security Headers (replaces helmet) ────────────────────────────────
 const securityHeaders = (req, res, next) => {
   res.setHeader("X-Content-Type-Options",    "nosniff");
   res.setHeader("X-Frame-Options",           "DENY");
@@ -26,8 +19,8 @@ const securityHeaders = (req, res, next) => {
   res.setHeader("Permissions-Policy",        "camera=(), microphone=(), geolocation=()");
   res.setHeader(
     "Content-Security-Policy",
-    "default-src 'self'; script-src 'self' https://accounts.google.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' ws: wss: https://accounts.google.com https://netbuzz.onrender.com;"
-  ); // Yahan Render ka link add kiya hai taaki Google Auth block na ho
+    "default-src 'self'; script-src 'self' https://accounts.google.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' ws: wss: https://netbuzz.onrender.com https://net-buzz.vercel.app https://accounts.google.com;"
+  );
   next();
 };
 
@@ -46,12 +39,12 @@ const registerChatSocket = require("./socket/chatSocket");
 const registerGameSocket = require("./socket/gameSocket");
 
 const app    = express();
-const server = http.createServer(app);
+const server = http.createServer(app);           // HTTP server wraps Express
 
-// ─── Socket.io Setup with Multiple Origins ────────────────────────────────────
+// ─── Socket.io Setup ──────────────────────────────────────────────────────────
 const io = new Server(server, {
   cors: {
-    origin: allowedOrigins,
+    origin: process.env.CLIENT_URL || "https://net-buzz.vercel.app",
     methods: ["GET", "POST"],
     credentials: true,
   },
@@ -59,25 +52,18 @@ const io = new Server(server, {
   pingInterval: 25000,
 });
 
+// Make io accessible from req.app.get("io") inside controllers
 app.set("io", io);
 
-// ─── Express Middleware with Dynamic CORS ─────────────────────────────────────
+// ─── Express Middleware ───────────────────────────────────────────────────────
 app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl) or if in allowedOrigins
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: process.env.CLIENT_URL || "https://net-buzz.vercel.app",
   credentials: true,
 }));
-
 app.use(securityHeaders);
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
-app.use(sanitizeInputs);
+app.use(sanitizeInputs); // strip XSS & NoSQL injection from all inputs
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // ─── REST Routes ──────────────────────────────────────────────────────────────
@@ -132,6 +118,7 @@ const PORT = process.env.PORT || 5000;
 connectDB().then(() => {
   server.listen(PORT, () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);
+    console.log(`🔌 Socket.io ready  → /chat  and  /game namespaces`);
   });
 });
 

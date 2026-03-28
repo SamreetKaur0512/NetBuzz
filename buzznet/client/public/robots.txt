@@ -11,4 +11,4 @@ Disallow: /blocked
 Disallow: /follow-requests
 
 # Sitemap location
-Sitemap: https://yourdomain.com/sitemap.xml
+Sitemap: https://net-buzz.vercel.app/sitemap.xml
