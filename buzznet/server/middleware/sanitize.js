@@ -1,21 +1,13 @@
 // ─── server/middleware/sanitize.js ───────────────────────────────────────────
-// Input sanitization — strips dangerous characters from req.body, req.query,
-// req.params to prevent XSS and NoSQL injection attacks.
-// No extra npm package needed.
+// Blocks MongoDB NoSQL injection ($-prefixed keys) from req.body/query/params.
+// Does NOT strip HTML tags — that would break post captions, messages, and bios
+// that users may write with special characters. XSS is handled by the frontend
+// (React escapes all output by default).
 
-/**
- * Recursively sanitize a value:
- * - Strings: strip HTML tags, trim, remove null bytes, block $-prefixed keys
- * - Objects/Arrays: recurse into them
- * - Everything else: pass through unchanged
- */
 const sanitizeValue = (value) => {
   if (typeof value === "string") {
-    return value
-      .replace(/\x00/g, "")                    // remove null bytes
-      .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, "") // strip <script> tags
-      .replace(/<[^>]+>/g, "")                  // strip all other HTML tags
-      .trim();
+    // Only remove null bytes — everything else is safe in MongoDB with Mongoose
+    return value.replace(/\x00/g, "");
   }
   if (Array.isArray(value)) {
     return value.map(sanitizeValue);
@@ -29,13 +21,9 @@ const sanitizeValue = (value) => {
     }
     return sanitized;
   }
-  return value; // numbers, booleans, null — leave alone
+  return value;
 };
 
-/**
- * Express middleware — sanitizes req.body, req.query, req.params in-place.
- * Apply globally in server.js after express.json().
- */
 const sanitizeInputs = (req, res, next) => {
   if (req.body)   req.body   = sanitizeValue(req.body);
   if (req.query)  req.query  = sanitizeValue(req.query);

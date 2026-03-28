@@ -10,28 +10,19 @@ require("dotenv").config();
 const { authLimiter, postLimiter, generalLimiter } = require("./middleware/rateLimit");
 const { sanitizeInputs } = require("./middleware/sanitize");
 
-// ─── Simple Security Headers (replaces helmet) ────────────────────────────────
+// ─── Security Headers ────────────────────────────────────────────────────────
+// NOTE: No Content-Security-Policy here — CSP belongs on the frontend (Vercel),
+// not the backend API server. Adding CSP to API responses caused features to break
+// because browsers applied it to the React app pages.
+// Only safe, non-breaking headers are set here.
 const securityHeaders = (req, res, next) => {
-  res.setHeader("X-Content-Type-Options",    "nosniff");
-  res.setHeader("X-Frame-Options",           "DENY");
-  res.setHeader("X-XSS-Protection",          "1; mode=block");
-  res.setHeader("Referrer-Policy",           "strict-origin-when-cross-origin");
-  res.setHeader("Permissions-Policy",        "camera=(), microphone=(), geolocation=()");
-  // Google Sign-In needs: accounts.google.com (scripts + frames + connect),
-  // googleapis.com (connect), gstatic.com (scripts/styles inside the popup)
-  res.setHeader(
-    "Content-Security-Policy",
-    [
-      "default-src 'self'",
-      "script-src 'self' https://accounts.google.com https://apis.google.com https://ssl.gstatic.com",
-      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com",
-      "font-src 'self' https://fonts.gstatic.com",
-      "img-src 'self' data: blob: https:",
-      "frame-src https://accounts.google.com https://content.googleapis.com",
-      "connect-src 'self' ws: wss: https://netbuzz.onrender.com https://net-buzz.vercel.app https://accounts.google.com https://oauth2.googleapis.com https://openidconnect.googleapis.com",
-      "form-action 'self' https://accounts.google.com",
-    ].join("; ")
-  );
+  res.setHeader("X-Content-Type-Options",       "nosniff");
+  res.setHeader("X-XSS-Protection",             "1; mode=block");
+  res.setHeader("Referrer-Policy",              "strict-origin-when-cross-origin");
+  res.setHeader("Permissions-Policy",           "camera=(), microphone=(), geolocation=()");
+  // unsafe-none is required for Google Sign-In popup postMessage to work
+  res.setHeader("Cross-Origin-Opener-Policy",   "unsafe-none");
+  res.setHeader("Cross-Origin-Embedder-Policy", "unsafe-none");
   next();
 };
 
@@ -52,10 +43,25 @@ const registerGameSocket = require("./socket/gameSocket");
 const app    = express();
 const server = http.createServer(app);           // HTTP server wraps Express
 
+// ─── Allowed Origins (defined early — used by both CORS and Socket.io) ────────
+const allowedOrigins = [
+  "https://net-buzz.vercel.app",
+  "http://net-buzz.vercel.app",
+  "http://localhost:3000",
+  "http://localhost:5173",
+];
+if (process.env.CLIENT_URL && !allowedOrigins.includes(process.env.CLIENT_URL)) {
+  allowedOrigins.push(process.env.CLIENT_URL);
+  if (process.env.CLIENT_URL.startsWith("http://"))
+    allowedOrigins.push(process.env.CLIENT_URL.replace("http://", "https://"));
+  else if (process.env.CLIENT_URL.startsWith("https://"))
+    allowedOrigins.push(process.env.CLIENT_URL.replace("https://", "http://"));
+}
+
 // ─── Socket.io Setup ──────────────────────────────────────────────────────────
 const io = new Server(server, {
   cors: {
-    origin: process.env.CLIENT_URL || "https://net-buzz.vercel.app",
+    origin: allowedOrigins,
     methods: ["GET", "POST"],
     credentials: true,
   },
@@ -67,14 +73,22 @@ const io = new Server(server, {
 app.set("io", io);
 
 // ─── Express Middleware ───────────────────────────────────────────────────────
+
 app.use(cors({
-  origin: process.env.CLIENT_URL || "https://net-buzz.vercel.app",
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, curl, Postman)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    callback(new Error(`CORS: origin ${origin} not allowed`));
+  },
   credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
 }));
 app.use(securityHeaders);
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
-app.use(sanitizeInputs); // strip XSS & NoSQL injection from all inputs
+app.use(sanitizeInputs); // blocks MongoDB $ operator injection only
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // ─── REST Routes ──────────────────────────────────────────────────────────────
