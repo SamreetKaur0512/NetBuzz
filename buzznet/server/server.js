@@ -6,26 +6,6 @@ const path       = require("path");
 const { Server } = require("socket.io");
 require("dotenv").config();
 
-// ─── Security & Rate Limiting ─────────────────────────────────────────────────
-const { postLimiter, generalLimiter } = require("./middleware/rateLimit");
-const { sanitizeInputs } = require("./middleware/sanitize");
-
-// ─── Security Headers ────────────────────────────────────────────────────────
-// NOTE: No Content-Security-Policy here — CSP belongs on the frontend (Vercel),
-// not the backend API server. Adding CSP to API responses caused features to break
-// because browsers applied it to the React app pages.
-// Only safe, non-breaking headers are set here.
-const securityHeaders = (req, res, next) => {
-  res.setHeader("X-Content-Type-Options",       "nosniff");
-  res.setHeader("X-XSS-Protection",             "1; mode=block");
-  res.setHeader("Referrer-Policy",              "strict-origin-when-cross-origin");
-  res.setHeader("Permissions-Policy",           "camera=(), microphone=(), geolocation=()");
-  // unsafe-none is required for Google Sign-In popup postMessage to work
-  res.setHeader("Cross-Origin-Opener-Policy",   "unsafe-none");
-  res.setHeader("Cross-Origin-Embedder-Policy", "unsafe-none");
-  next();
-};
-
 // ─── Route Imports ────────────────────────────────────────────────────────────
 const authRoutes    = require("./routes/auth");
 const userRoutes    = require("./routes/users");
@@ -41,9 +21,9 @@ const registerChatSocket = require("./socket/chatSocket");
 const registerGameSocket = require("./socket/gameSocket");
 
 const app    = express();
-const server = http.createServer(app);           // HTTP server wraps Express
+const server = http.createServer(app);
 
-// ─── Allowed Origins (defined early — used by both CORS and Socket.io) ────────
+// ─── Allowed Origins ──────────────────────────────────────────────────────────
 const allowedOrigins = [
   "https://net-buzz.vercel.app",
   "http://net-buzz.vercel.app",
@@ -69,14 +49,11 @@ const io = new Server(server, {
   pingInterval: 25000,
 });
 
-// Make io accessible from req.app.get("io") inside controllers
 app.set("io", io);
 
 // ─── Express Middleware ───────────────────────────────────────────────────────
-
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (mobile apps, curl, Postman)
     if (!origin) return callback(null, true);
     if (allowedOrigins.includes(origin)) return callback(null, true);
     callback(new Error(`CORS: origin ${origin} not allowed`));
@@ -85,16 +62,26 @@ app.use(cors({
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
 }));
-app.use(securityHeaders);
+
+// Security headers — only safe ones that don't break anything
+app.use((req, res, next) => {
+  res.setHeader("X-Content-Type-Options",       "nosniff");
+  res.setHeader("X-XSS-Protection",             "1; mode=block");
+  res.setHeader("Referrer-Policy",              "strict-origin-when-cross-origin");
+  // Required for Google Sign-In popup postMessage to work
+  res.setHeader("Cross-Origin-Opener-Policy",   "unsafe-none");
+  res.setHeader("Cross-Origin-Embedder-Policy", "unsafe-none");
+  next();
+});
+
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
-app.use(sanitizeInputs); // blocks MongoDB $ operator injection only
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // ─── REST Routes ──────────────────────────────────────────────────────────────
-app.use("/api/auth",     authRoutes);   // per-route limiters defined in routes/auth.js
-app.use("/api/users",    generalLimiter, userRoutes);
-app.use("/api/posts",    postLimiter,    postRoutes);
+app.use("/api/auth",     authRoutes);
+app.use("/api/users",    userRoutes);
+app.use("/api/posts",    postRoutes);
 app.use("/api/chat",     chatRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/games",    gameRoutes);
