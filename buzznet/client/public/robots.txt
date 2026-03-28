@@ -1,0 +1,14 @@
+# BuzzNet robots.txt
+User-agent: *
+Allow: /
+
+# Block private/api routes from indexing
+Disallow: /api/
+Disallow: /upload
+Disallow: /chat
+Disallow: /games
+Disallow: /blocked
+Disallow: /follow-requests
+
+# Sitemap location
+Sitemap: https://yourdomain.com/sitemap.xml

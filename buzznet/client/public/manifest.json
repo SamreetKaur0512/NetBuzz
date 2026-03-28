@@ -1,0 +1,20 @@
+{
+  "short_name": "BuzzNet",
+  "name": "BuzzNet — Share Your World",
+  "description": "Share photos, chat in real time, and play multiplayer games with your friends.",
+  "icons": [
+    { "src": "favicon-16.png",      "sizes": "16x16",   "type": "image/png" },
+    { "src": "favicon-32.png",      "sizes": "32x32",   "type": "image/png" },
+    { "src": "apple-touch-icon.png","sizes": "180x180", "type": "image/png", "purpose": "apple touch icon" },
+    { "src": "icon-192.png",        "sizes": "192x192", "type": "image/png", "purpose": "maskable any" },
+    { "src": "icon-512.png",        "sizes": "512x512", "type": "image/png", "purpose": "maskable any" }
+  ],
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#0a0a0b",
+  "background_color": "#0a0a0b",
+  "categories": ["social", "entertainment"],
+  "lang": "en"
+}
