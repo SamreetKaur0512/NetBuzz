@@ -117,7 +117,7 @@ const connectDB = async () => {
 const PORT = process.env.PORT || 5000;
 connectDB().then(() => {
   server.listen(PORT, () => {
-    console.log(`🚀 Server running on http://localhost:${PORT}`);
+    console.log(`🚀 Server is running on http://localhost:${PORT}`);
     console.log(`🔌 Socket.io ready  → /chat  and  /game namespaces`);
   });
 });
