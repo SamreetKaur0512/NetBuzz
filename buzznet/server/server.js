@@ -7,7 +7,7 @@ const { Server } = require("socket.io");
 require("dotenv").config();
 
 // ─── Security & Rate Limiting ─────────────────────────────────────────────────
-const { authLimiter, postLimiter, generalLimiter } = require("./middleware/rateLimit");
+const { postLimiter, generalLimiter } = require("./middleware/rateLimit");
 const { sanitizeInputs } = require("./middleware/sanitize");
 
 // ─── Security Headers ────────────────────────────────────────────────────────
