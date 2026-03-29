@@ -1,28 +1,30 @@
-const express = require("express");
-const router  = express.Router();
-const { verifyToken }              = require("../middleware/auth");
-const { upload, handleMulterError } = require("../middleware/upload");
-const {
-  register, login, googleAuth, googleSetup, setPassword, changePassword,
-  sendOtp, verifyOtp, resendOtp, forgotPassword, resetPassword,
-} = require("../controllers/authController");
+const jwt  = require("jsonwebtoken");
+const User = require("../models/User");
 
-// --- Routes without Limiters ---
+const verifyToken = async (req, res, next) => {
+  try {
+    let token;
 
-router.post("/register", upload.single("profilePicture"), handleMulterError, register);
-router.post("/login", login);
-router.post("/google", googleAuth);
-router.post("/google-setup", upload.single("profilePicture"), handleMulterError, googleSetup);
-router.post("/set-password", setPassword);
-router.post("/change-password", verifyToken, changePassword);
+    if (req.headers.authorization && req.headers.authorization.startsWith("Bearer ")) {
+      token = req.headers.authorization.split(" ")[1];
+    }
 
-// OTP-based registration
-router.post("/send-otp", sendOtp);
-router.post("/verify-otp", upload.single("profilePicture"), handleMulterError, verifyOtp);
-router.post("/resend-otp", resendOtp);
+    if (!token) {
+      return res.status(401).json({ success: false, message: "Not authorized. No token provided." });
+    }
 
-// Forgot / reset password
-router.post("/forgot-password", forgotPassword);
-router.post("/reset-password", resetPassword);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id);
 
-module.exports = router;
+    if (!user) {
+      return res.status(401).json({ success: false, message: "User no longer exists." });
+    }
+
+    req.user = user;
+    next();
+  } catch (err) {
+    return res.status(401).json({ success: false, message: "Not authorized. Invalid token." });
+  }
+};
+
+module.exports = { verifyToken };
