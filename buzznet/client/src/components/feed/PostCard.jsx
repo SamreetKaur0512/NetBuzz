@@ -5,15 +5,11 @@ import { Avatar, Icons, toast } from '../ui';
 import { postAPI } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 
-// ── Critical: always use the deployed server URL for media ───────────────────
-// REACT_APP_SERVER_URL must be set in Vercel env vars to your Render URL
-// e.g. https://your-app.onrender.com
 const SERVER = (process.env.REACT_APP_SERVER_URL || 'http://localhost:5000').replace(/\/$/, '');
 
 const getMediaUrl = (mediaUrl) => {
   if (!mediaUrl) return '';
   if (mediaUrl.startsWith('http://') || mediaUrl.startsWith('https://')) return mediaUrl;
-  // Ensure single slash between server and path
   const cleanPath = mediaUrl.startsWith('/') ? mediaUrl : `/${mediaUrl}`;
   return `${SERVER}${cleanPath}`;
 };
@@ -101,7 +97,8 @@ function ReplyRow({ reply, postId, commentId, postOwnerId, onDeleteSelf, level =
       } : {
         _id: `temp-${Date.now()}`, text: textToPost, createdAt: new Date().toISOString(),
         userId: { _id: user._id, username: user.username, userId: user.userId, profilePicture: user.profilePicture },
-        replyToUser: replyUser ? { _id: replyUser._id, username: replyUser.username } : null, replies: [],
+        replyToUser: replyUser ? { _id: replyUser._id, username: replyUser.username } : null,
+        replies: [],
       };
       setSubReplies(prev => [...prev, newSub]);
       setShowSubReplies(true); setUserCollapsed(false);
@@ -150,14 +147,16 @@ function ReplyRow({ reply, postId, commentId, postOwnerId, onDeleteSelf, level =
       </div>
 
       {showInput && (
-        <form onSubmit={handleSubReply} style={{ display: 'flex', gap: 8, padding: '6px 0 2px 32px', alignItems: 'center' }}>
+        <form onSubmit={handleSubReply}
+          style={{ display: 'flex', gap: 8, padding: '6px 0 2px 32px', alignItems: 'center' }}>
           <Avatar src={user?.profilePicture} username={user?.username || '?'} size={22} />
           <div style={S.replyBox}>
             <span style={{ ...S.mention, whiteSpace: 'nowrap' }}>@{replyUser?.username || 'user'} </span>
             <input value={replyText} onChange={e => setReplyText(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') handleSubReply(e); }}
               placeholder="Add a reply…" autoFocus style={S.replyInput} />
-            <button type="submit" disabled={!replyText.trim() || submitting} style={S.postBtn(replyText.trim() && !submitting)}>
+            <button type="submit" disabled={!replyText.trim() || submitting}
+              style={S.postBtn(replyText.trim() && !submitting)}>
               {submitting ? '…' : 'Post'}
             </button>
           </div>
@@ -224,7 +223,8 @@ function CommentRow({ comment, postId, postOwnerId, onDeleteComment }) {
       } : {
         _id: `temp-${Date.now()}`, text: replyText.trim(), createdAt: new Date().toISOString(),
         userId: { _id: user._id, username: user.username, userId: user.userId, profilePicture: user.profilePicture },
-        replyToUser: commentUser ? { _id: commentUser._id, username: commentUser.username } : null, replies: [],
+        replyToUser: commentUser ? { _id: commentUser._id, username: commentUser.username } : null,
+        replies: [],
       };
       setReplies(prev => [...prev, newReply]);
       setShowReplies(true); setReplyText(''); setShowInput(false);
@@ -267,14 +267,16 @@ function CommentRow({ comment, postId, postOwnerId, onDeleteComment }) {
       </div>
 
       {showInput && (
-        <form onSubmit={handleReply} style={{ display: 'flex', gap: 8, padding: '6px 0 2px 38px', alignItems: 'center' }}>
+        <form onSubmit={handleReply}
+          style={{ display: 'flex', gap: 8, padding: '6px 0 2px 38px', alignItems: 'center' }}>
           <Avatar src={user?.profilePicture} username={user?.username || '?'} size={24} />
           <div style={S.replyBox}>
             <span style={{ ...S.mention, whiteSpace: 'nowrap' }}>@{commentUser?.username || 'user'} </span>
             <input value={replyText} onChange={e => setReplyText(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') handleReply(e); }}
               placeholder="Add a reply…" autoFocus style={S.replyInput} />
-            <button type="submit" disabled={!replyText.trim() || submitting} style={S.postBtn(replyText.trim() && !submitting)}>
+            <button type="submit" disabled={!replyText.trim() || submitting}
+              style={S.postBtn(replyText.trim() && !submitting)}>
               {submitting ? '…' : 'Post'}
             </button>
           </div>
@@ -362,7 +364,7 @@ export default function PostCard({ post, onUpdate }) {
   };
 
   return (
-    <article className="post-card">
+    <article className="post-card" style={{ maxWidth: 600, margin: '0 auto', width: '100%' }}>
 
       {/* ── Header ── */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '14px 16px', borderBottom: '1px solid #edf0f8' }}>
@@ -377,7 +379,8 @@ export default function PostCard({ post, onUpdate }) {
         </div>
         {user?._id === postOwnerId && (
           <button onClick={handleDeletePost}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#FF4757', fontSize: 12, fontWeight: 700, fontFamily: 'Poppins, sans-serif', padding: '4px 8px', borderRadius: 8 }}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#FF4757',
+              fontSize: 12, fontWeight: 700, fontFamily: 'Poppins, sans-serif', padding: '4px 8px', borderRadius: 8 }}
             onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,71,87,0.08)'}
             onMouseLeave={e => e.currentTarget.style.background = 'none'}>
             Delete
@@ -385,30 +388,49 @@ export default function PostCard({ post, onUpdate }) {
         )}
       </div>
 
-      {/* ── Media ── */}
-      {post.mediaUrl && !imgError && (
-        post.mediaType === 'video' ? (
-          <video
-            src={mediaUrl}
-            controls
-            playsInline
-            onError={() => setImgError(true)}
-            style={{ width: '100%', display: 'block', maxHeight: 520, objectFit: 'contain', background: '#f0f2f8' }}
-          />
-        ) : (
-          <img
-            src={mediaUrl}
-            alt="post"
-            onError={() => setImgError(true)}
-            style={{ width: '100%', display: 'block' }}
-          />
-        )
-      )}
-      {imgError && (
-        <div style={{ width: '100%', height: 200, background: '#f0f2f8', display: 'flex', alignItems: 'center',
-          justifyContent: 'center', color: '#9aa0b8', fontSize: 13, flexDirection: 'column', gap: 8 }}>
-          <span style={{ fontSize: 32 }}>🖼️</span>
-          <span>Media unavailable</span>
+      {/* ── Media — properly sized, Instagram-style ── */}
+      {post.mediaUrl && (
+        <div style={{
+          width: '100%',
+          background: '#000',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          maxHeight: 500,
+          overflow: 'hidden',
+        }}>
+          {imgError ? (
+            <div style={{ width: '100%', height: 200, display: 'flex', flexDirection: 'column',
+              alignItems: 'center', justifyContent: 'center', gap: 8, color: '#9aa0b8', background: '#f0f2f8' }}>
+              <span style={{ fontSize: 36 }}>🖼️</span>
+              <span style={{ fontSize: 13 }}>Media unavailable</span>
+            </div>
+          ) : post.mediaType === 'video' ? (
+            <video
+              src={mediaUrl}
+              controls
+              playsInline
+              onError={() => setImgError(true)}
+              style={{
+                width: '100%',
+                maxHeight: 500,
+                objectFit: 'contain',
+                display: 'block',
+              }}
+            />
+          ) : (
+            <img
+              src={mediaUrl}
+              alt="post"
+              onError={() => setImgError(true)}
+              style={{
+                width: '100%',
+                maxHeight: 500,
+                objectFit: 'contain',
+                display: 'block',
+              }}
+            />
+          )}
         </div>
       )}
 
@@ -426,16 +448,18 @@ export default function PostCard({ post, onUpdate }) {
       {/* ── Actions ── */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '8px 12px 6px' }}>
         <button onClick={handleLike} disabled={likeLoading}
-          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 11px', borderRadius: 10, border: 'none',
-            background: isLiked ? 'rgba(255,71,87,0.08)' : 'none', color: isLiked ? '#FF4757' : '#9aa0b8',
-            fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: 'Poppins, sans-serif', transition: 'all 0.15s' }}>
+          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 11px', borderRadius: 10,
+            border: 'none', background: isLiked ? 'rgba(255,71,87,0.08)' : 'none',
+            color: isLiked ? '#FF4757' : '#9aa0b8', fontWeight: 700, fontSize: 13,
+            cursor: 'pointer', fontFamily: 'Poppins, sans-serif', transition: 'all 0.15s' }}>
           <Icons.Heart filled={isLiked} />
           <span>{likesCount}</span>
         </button>
         <button onClick={() => setShowComments(v => !v)}
-          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 11px', borderRadius: 10, border: 'none',
-            background: showComments ? 'rgba(61,155,247,0.08)' : 'none', color: showComments ? '#3D9BF7' : '#9aa0b8',
-            fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: 'Poppins, sans-serif', transition: 'all 0.15s' }}>
+          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 11px', borderRadius: 10,
+            border: 'none', background: showComments ? 'rgba(61,155,247,0.08)' : 'none',
+            color: showComments ? '#3D9BF7' : '#9aa0b8', fontWeight: 700, fontSize: 13,
+            cursor: 'pointer', fontFamily: 'Poppins, sans-serif', transition: 'all 0.15s' }}>
           <Icons.Comment />
           <span>{comments.length} {comments.length === 1 ? 'comment' : 'comments'}</span>
         </button>
@@ -447,17 +471,20 @@ export default function PostCard({ post, onUpdate }) {
           <Avatar src={user?.profilePicture} username={user?.username || '?'} size={30} />
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', background: '#fff', borderRadius: 24,
             padding: '7px 14px', border: `1.5px solid ${inputFocused ? '#FFD700' : '#dde2f0'}`,
-            boxShadow: inputFocused ? '0 0 0 3px rgba(255,215,0,0.10)' : 'none', transition: 'border-color 0.15s, box-shadow 0.15s' }}>
+            boxShadow: inputFocused ? '0 0 0 3px rgba(255,215,0,0.10)' : 'none',
+            transition: 'border-color 0.15s, box-shadow 0.15s' }}>
             <input value={commentText} onChange={e => setCommentText(e.target.value)}
               onFocus={() => setInputFocused(true)} onBlur={() => setInputFocused(false)}
               onKeyDown={e => { if (e.key === 'Enter' && commentText.trim()) handleComment(e); }}
               placeholder="Add a comment…"
-              style={{ flex: 1, background: 'none', border: 'none', outline: 'none', fontSize: 13, color: '#1a1d2e', fontFamily: 'Nunito, sans-serif' }} />
+              style={{ flex: 1, background: 'none', border: 'none', outline: 'none',
+                fontSize: 13, color: '#1a1d2e', fontFamily: 'Nunito, sans-serif' }} />
             {commentText.trim() && (
               <button onClick={handleComment} disabled={posting}
                 style={{ background: 'linear-gradient(135deg,#FFD700,#F7A325)', color: '#1a1d2e', border: 'none',
                   borderRadius: 14, padding: '4px 13px', cursor: 'pointer', fontSize: 12, fontWeight: 800,
-                  fontFamily: 'Poppins, sans-serif', marginLeft: 8, whiteSpace: 'nowrap', boxShadow: '0 2px 8px rgba(255,215,0,0.3)' }}>
+                  fontFamily: 'Poppins, sans-serif', marginLeft: 8, whiteSpace: 'nowrap',
+                  boxShadow: '0 2px 8px rgba(255,215,0,0.3)' }}>
                 {posting ? '…' : 'Post'}
               </button>
             )}
