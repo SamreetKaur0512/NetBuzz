@@ -7,10 +7,10 @@ import { Avatar, Icons, LoadingCenter, Modal, toast } from '../components/ui';
 const SERVER = process.env.REACT_APP_SERVER_URL || 'http://localhost:5000';
 
 export default function ProfilePage() {
-  const { id }                   = useParams();
+  const { id }                       = useParams();
   const { user, updateUser, logout } = useAuth();
-  const navigate                 = useNavigate();
-  const fileRef                  = useRef(null);
+  const navigate                     = useNavigate();
+  const fileRef                      = useRef(null);
 
   const [profile, setProfile]   = useState(null);
   const [posts, setPosts]       = useState([]);
@@ -25,15 +25,15 @@ export default function ProfilePage() {
   const [followReqStatus, setFollowReqStatus] = useState(null);
   const [listModal, setListModal] = useState(null);
 
-  // ── Change Password (works for all users, multiple times) ─────────────────
-  const [setPassOpen, setSetPassOpen]     = useState(false);
-  const [currentPass, setCurrentPass]     = useState('');
-  const [newPass, setNewPass]             = useState('');
-  const [confirmPass, setConfirmPass]     = useState('');
-  const [passErr, setPassErr]             = useState('');
-  const [passLoading, setPassLoading]     = useState(false);
+  // ── Change Password ────────────────────────────────────────────────────────
+  const [setPassOpen, setSetPassOpen] = useState(false);
+  const [currentPass, setCurrentPass] = useState('');
+  const [newPass, setNewPass]         = useState('');
+  const [confirmPass, setConfirmPass] = useState('');
+  const [passErr, setPassErr]         = useState('');
+  const [passLoading, setPassLoading] = useState(false);
 
-  // ── Delete Account ───────────────────────────────────────────────────────────
+  // ── Delete Account ─────────────────────────────────────────────────────────
   const [deleteOpen, setDeleteOpen]       = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState('');
   const [deleting, setDeleting]           = useState(false);
@@ -61,14 +61,13 @@ export default function ProfilePage() {
       .finally(() => setLoading(false));
   }, [id]);
 
-  // FIX: If viewing own profile and hasPassword isn't in profile yet, get it from /me
+  // If viewing own profile and hasPassword isn't set yet, get it from /me
   useEffect(() => {
     if (!isOwn || !profile || profile.hasPassword !== undefined) return;
     userAPI.getMe()
       .then(res => {
-        if (res.data.user?.hasPassword !== undefined) {
+        if (res.data.user?.hasPassword !== undefined)
           setProfile(p => ({ ...p, hasPassword: res.data.user.hasPassword }));
-        }
       })
       .catch(() => {});
   }, [isOwn, profile]);
@@ -137,7 +136,6 @@ export default function ProfilePage() {
       fd.append('isPrivate', editForm.isPrivate);
       if (editFile) fd.append('profilePicture', editFile);
       const res = await userAPI.update(id, fd);
-      // Merge hasPassword back — server now returns it in update response
       const updatedUser = res.data.user;
       setProfile(p => ({ ...p, ...updatedUser }));
       updateUser(updatedUser);
@@ -148,19 +146,15 @@ export default function ProfilePage() {
     } finally { setSaving(false); }
   };
 
-  // ── Change / Set Password handler ────────────────────────────────────────────
-  // FIX: Always uses changePassword endpoint which supports multiple changes.
-  // currentPass is required only when user already has a password.
+  // ── Change / Set Password ──────────────────────────────────────────────────
   const handleSetPassword = async () => {
     setPassErr('');
-    if (newPass.length < 6) return setPassErr('New password must be at least 6 characters.');
-    if (newPass !== confirmPass) return setPassErr('Passwords do not match.');
-    // If account already has password, current password is mandatory
+    if (newPass.length < 6)        return setPassErr('New password must be at least 6 characters.');
+    if (newPass !== confirmPass)   return setPassErr('Passwords do not match.');
     if (profile.hasPassword && !currentPass) return setPassErr('Current password is required.');
     setPassLoading(true);
     try {
       await authAPI.changePassword({ currentPassword: currentPass, newPassword: newPass });
-      // After setting/changing password, mark hasPassword as true for future changes
       setProfile(p => ({ ...p, hasPassword: true }));
       updateUser({ hasPassword: true });
       toast.success(profile.hasPassword ? 'Password changed successfully!' : 'Password set! You can now sign in with email too.');
@@ -171,7 +165,7 @@ export default function ProfilePage() {
     } finally { setPassLoading(false); }
   };
 
-  // ── Delete Account handler ───────────────────────────────────────────────────
+  // ── Delete Account ─────────────────────────────────────────────────────────
   const handleDeleteAccount = async () => {
     if (deleteConfirm.toUpperCase() !== 'DELETE') return;
     setDeleting(true);
@@ -195,7 +189,8 @@ export default function ProfilePage() {
 
   return (
     <div className="profile-page">
-      {/* ── Header ────────────────────────────────────────────────────── */}
+
+      {/* ── Header ──────────────────────────────────────────────────────── */}
       <div className="profile-header">
         <div className="profile-avatar-wrap">
           <Avatar src={profile.profilePicture} username={profile.username} size={96} ring />
@@ -245,14 +240,12 @@ export default function ProfilePage() {
                   <Icons.Settings /> Edit Profile
                 </button>
 
-                {/* Change/Set Password button */}
                 <button className="btn btn-secondary btn-sm"
                   onClick={() => { setSetPassOpen(true); setPassErr(''); setCurrentPass(''); setNewPass(''); setConfirmPass(''); }}
                   style={{ borderColor: 'var(--accent, #3D9BF7)', color: 'var(--accent, #3D9BF7)' }}>
                   🔑 {profile.hasPassword ? 'Change Password' : 'Set Password'}
                 </button>
 
-                {/* Delete Account button */}
                 <button className="btn btn-sm"
                   onClick={() => { setDeleteOpen(true); setDeleteConfirm(''); }}
                   style={{ background: 'rgba(231,76,60,0.10)', color: '#e74c3c',
@@ -305,7 +298,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* ── Post Grid ──────────────────────────────────────────────────── */}
+      {/* ── Post Grid ───────────────────────────────────────────────────── */}
       {isBlocked ? (
         <div className="private-badge">
           <Icons.Lock />
@@ -376,7 +369,7 @@ export default function ProfilePage() {
         </Modal>
       )}
 
-      {/* ── Edit Profile Modal ──────────────────────────────────────────── */}
+      {/* ── Edit Profile Modal ───────────────────────────────────────── */}
       {editOpen && (
         <Modal title="Edit Profile" onClose={() => setEditOpen(false)}>
           <div style={{ textAlign: 'center', marginBottom: 20 }}>
@@ -415,34 +408,60 @@ export default function ProfilePage() {
         </Modal>
       )}
 
-      {/* ── Change / Set Password Modal ─────────────────────────────────────── */}
+      {/* ── Change / Set Password Modal ──────────────────────────────── */}
       {setPassOpen && (
-        <Modal title={profile.hasPassword ? 'Change Password' : 'Set a Password'}
+        <Modal
+          title={profile.hasPassword ? 'Change Password' : 'Set a Password'}
           onClose={() => { setSetPassOpen(false); setCurrentPass(''); setNewPass(''); setConfirmPass(''); setPassErr(''); }}>
+
           <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 16, lineHeight: 1.6 }}>
             {profile.hasPassword
               ? 'Enter your current password, then choose a new one. You can change it as many times as you like.'
               : 'Set a password to also be able to sign in with your email.'}
           </div>
+
           {passErr && <div className="error-msg" style={{ marginBottom: 12 }}>{passErr}</div>}
-          {/* FIX: Always show current password field if user already has a password */}
+
+          {/* Current password — only shown when user already has a password.
+              autoComplete="new-password" prevents browser from autofilling saved passwords. */}
           {profile.hasPassword && (
             <div className="form-group">
               <label className="form-label">Current Password</label>
-              <input className="form-input" type="password" value={currentPass}
-                onChange={e => setCurrentPass(e.target.value)} placeholder="Your current password" />
+              <input
+                className="form-input"
+                type="password"
+                value={currentPass}
+                onChange={e => setCurrentPass(e.target.value)}
+                placeholder="Enter your current password"
+                autoComplete="new-password"
+              />
             </div>
           )}
+
           <div className="form-group">
             <label className="form-label">New Password</label>
-            <input className="form-input" type="password" value={newPass}
-              onChange={e => setNewPass(e.target.value)} placeholder="Min 6 characters" />
+            <input
+              className="form-input"
+              type="password"
+              value={newPass}
+              onChange={e => setNewPass(e.target.value)}
+              placeholder="Min 6 characters"
+              autoComplete="new-password"
+            />
           </div>
+
           <div className="form-group">
             <label className="form-label">Confirm New Password</label>
-            <input className="form-input" type="password" value={confirmPass}
-              onChange={e => setConfirmPass(e.target.value)} placeholder="Re-enter new password" />
+            <input
+              className="form-input"
+              type="password"
+              value={confirmPass}
+              onChange={e => setConfirmPass(e.target.value)}
+              placeholder="Re-enter new password"
+              autoComplete="new-password"
+            />
           </div>
+
           <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
             <button className="btn btn-secondary btn-full"
               onClick={() => { setSetPassOpen(false); setCurrentPass(''); setNewPass(''); setConfirmPass(''); setPassErr(''); }}>
@@ -455,7 +474,7 @@ export default function ProfilePage() {
         </Modal>
       )}
 
-      {/* ── Delete Account Modal ─────────────────────────────────────────── */}
+      {/* ── Delete Account Modal ─────────────────────────────────────── */}
       {deleteOpen && (
         <Modal title="Delete Account" onClose={() => { setDeleteOpen(false); setDeleteConfirm(''); }}>
           <div style={{ background: 'rgba(231,76,60,0.08)', border: '1.5px solid rgba(231,76,60,0.3)',
@@ -493,6 +512,7 @@ export default function ProfilePage() {
           </div>
         </Modal>
       )}
+
     </div>
   );
 }

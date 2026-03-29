@@ -53,13 +53,13 @@ const sendPasswordResetEmail = async (email, otp, username) => {
           Hi ${username || "there"}, use this code to reset your BuzzNet password:
         </p>
         <div style="text-align: center; margin: 0 0 28px;">
-          <span style="display: inline-block; font-size: 42px; font-weight: 900; letter-spacing: 10px; color: #1a1d2e; background: #f4f6fb; padding: 16px 28px; border-radius: 12px; border: 2px solid #FFD700;">
+          <span style="display: inline-block; font-size: 42px; font-weight: 900; letter-spacing: 10px; color: #1a1d2e; background: #f4f6fb; padding: 16px 28px; border-radius: 12px; border: 2px solid #FF4757;">
             ${otp}
           </span>
         </div>
         <p style="color: #9aa0b8; font-size: 13px; margin: 0; text-align: center;">
           This code expires in <strong>10 minutes</strong>.<br/>
-          If you didn't request this, ignore this email — your password is safe.
+          If you didn't request a password reset, ignore this email.
         </p>
       </div>
     </div>
@@ -67,7 +67,7 @@ const sendPasswordResetEmail = async (email, otp, username) => {
   await transporter.sendMail({
     from:    `"BuzzNet" <${process.env.EMAIL_USER}>`,
     to:      email,
-    subject: `${otp} — Reset your BuzzNet password`,
+    subject: `${otp} is your BuzzNet password reset code`,
     html,
   });
 };

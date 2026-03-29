@@ -30,6 +30,7 @@ const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:5173",
 ];
+
 if (process.env.CLIENT_URL && !allowedOrigins.includes(process.env.CLIENT_URL)) {
   allowedOrigins.push(process.env.CLIENT_URL);
   if (process.env.CLIENT_URL.startsWith("http://"))
@@ -38,10 +39,22 @@ if (process.env.CLIENT_URL && !allowedOrigins.includes(process.env.CLIENT_URL)) 
     allowedOrigins.push(process.env.CLIENT_URL.replace("https://", "http://"));
 }
 
+// ─── Origin checker (shared by Express CORS + Socket.io) ─────────────────────
+const isAllowedOrigin = (origin) => {
+  if (!origin) return true;
+  if (allowedOrigins.includes(origin)) return true;
+  // Allow all Vercel preview deployments for this project
+  if (/^https:\/\/net-buzz.*\.vercel\.app$/.test(origin)) return true;
+  return false;
+};
+
 // ─── Socket.io Setup ──────────────────────────────────────────────────────────
 const io = new Server(server, {
   cors: {
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+      if (isAllowedOrigin(origin)) return callback(null, true);
+      callback(new Error(`CORS: origin ${origin} not allowed`));
+    },
     methods: ["GET", "POST"],
     credentials: true,
   },
@@ -51,11 +64,10 @@ const io = new Server(server, {
 
 app.set("io", io);
 
-// ─── Express Middleware ───────────────────────────────────────────────────────
+// ─── Express CORS Middleware ──────────────────────────────────────────────────
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) return callback(null, true);
+    if (isAllowedOrigin(origin)) return callback(null, true);
     callback(new Error(`CORS: origin ${origin} not allowed`));
   },
   credentials: true,
@@ -63,7 +75,7 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "Authorization"],
 }));
 
-// Security headers — only safe ones that don't break anything
+// ─── Security Headers ─────────────────────────────────────────────────────────
 app.use((req, res, next) => {
   res.setHeader("X-Content-Type-Options",       "nosniff");
   res.setHeader("X-XSS-Protection",             "1; mode=block");
@@ -76,7 +88,13 @@ app.use((req, res, next) => {
 
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+// ─── Static Uploads (with CORS so Vercel frontend can load images/videos) ─────
+app.use("/uploads", (req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+  next();
+}, express.static(path.join(__dirname, "uploads")));
 
 // ─── REST Routes ──────────────────────────────────────────────────────────────
 app.use("/api/auth",     authRoutes);
