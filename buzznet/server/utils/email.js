@@ -1,21 +1,49 @@
-const nodemailer = require("nodemailer");
+const https = require("https");
 
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+const sendEmail = async ({ to, subject, html }) => {
+  const apiKey = process.env.RESEND_API_KEY;
+  const fromAddress = process.env.EMAIL_FROM || "BuzzNet <onboarding@resend.dev>";
 
-// ── Registration / OTP verification email ─────────────────────────────────────
+  const body = JSON.stringify({ from: fromAddress, to, subject, html });
+
+  return new Promise((resolve, reject) => {
+    const req = https.request(
+      {
+        hostname: "api.resend.com",
+        path: "/emails",
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+          "Content-Length": Buffer.byteLength(body),
+        },
+      },
+      (res) => {
+        let data = "";
+        res.on("data", (chunk) => (data += chunk));
+        res.on("end", () => {
+          const parsed = JSON.parse(data);
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            resolve(parsed);
+          } else {
+            reject(new Error(`Resend error ${res.statusCode}: ${JSON.stringify(parsed)}`));
+          }
+        });
+      }
+    );
+    req.on("error", reject);
+    req.write(body);
+    req.end();
+  });
+};
+
 const sendOtpEmail = async (email, otp, username) => {
   const html = `
     <div style="font-family: 'Segoe UI', sans-serif; max-width: 480px; margin: 0 auto; background: #f4f6fb; padding: 32px 24px; border-radius: 16px;">
       <div style="text-align: center; margin-bottom: 24px;">
         <span style="font-size: 40px; font-style: italic; font-weight: 700; color: #F7A325; letter-spacing: -1px;">BuzzNet.</span>
       </div>
-      <div style="background: #fff; border-radius: 14px; padding: 32px; box-shadow: 0 4px 20px rgba(30,35,64,0.08);">
+      <div style="background: #fff; border-radius: 14px; padding: 32px;">
         <h2 style="margin: 0 0 8px; font-size: 22px; color: #1a1d2e;">Verify your email</h2>
         <p style="color: #5a6180; margin: 0 0 28px; font-size: 15px;">
           Hi ${username || "there"}, use this code to complete your BuzzNet registration:
@@ -32,22 +60,16 @@ const sendOtpEmail = async (email, otp, username) => {
       </div>
     </div>
   `;
-  await transporter.sendMail({
-    from:    `"BuzzNet" <${process.env.EMAIL_USER}>`,
-    to:      email,
-    subject: `${otp} is your BuzzNet verification code`,
-    html,
-  });
+  await sendEmail({ to: email, subject: `${otp} is your BuzzNet verification code`, html });
 };
 
-// ── Password reset email ───────────────────────────────────────────────────────
 const sendPasswordResetEmail = async (email, otp, username) => {
   const html = `
     <div style="font-family: 'Segoe UI', sans-serif; max-width: 480px; margin: 0 auto; background: #f4f6fb; padding: 32px 24px; border-radius: 16px;">
       <div style="text-align: center; margin-bottom: 24px;">
         <span style="font-size: 40px; font-style: italic; font-weight: 700; color: #F7A325; letter-spacing: -1px;">BuzzNet.</span>
       </div>
-      <div style="background: #fff; border-radius: 14px; padding: 32px; box-shadow: 0 4px 20px rgba(30,35,64,0.08);">
+      <div style="background: #fff; border-radius: 14px; padding: 32px;">
         <h2 style="margin: 0 0 8px; font-size: 22px; color: #1a1d2e;">Reset your password</h2>
         <p style="color: #5a6180; margin: 0 0 28px; font-size: 15px;">
           Hi ${username || "there"}, use this code to reset your BuzzNet password:
@@ -64,12 +86,7 @@ const sendPasswordResetEmail = async (email, otp, username) => {
       </div>
     </div>
   `;
-  await transporter.sendMail({
-    from:    `"BuzzNet" <${process.env.EMAIL_USER}>`,
-    to:      email,
-    subject: `${otp} is your BuzzNet password reset code`,
-    html,
-  });
+  await sendEmail({ to: email, subject: `${otp} is your BuzzNet password reset code`, html });
 };
 
 module.exports = { sendOtpEmail, sendPasswordResetEmail };
