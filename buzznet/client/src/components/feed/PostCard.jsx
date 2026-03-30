@@ -107,10 +107,15 @@ function ReplyRow({ reply, postId, commentId, postOwnerId, onDeleteSelf, level =
   };
 
   const handleDeleteSubReply = async (subReplyId) => {
+    if (String(subReplyId).startsWith('temp-')) return;
     try {
       await postAPI.deleteReply(postId, commentId, subReplyId);
       setSubReplies(prev => prev.filter(r => r._id !== subReplyId));
-    } catch (err) { console.error(err); toast.error('Could not delete reply'); }
+    } catch (err) {
+      console.error(err);
+      const msg = err?.response?.data?.message || 'Could not delete reply';
+      toast.error(msg);
+    }
   };
 
   return (
@@ -136,10 +141,16 @@ function ReplyRow({ reply, postId, commentId, postOwnerId, onDeleteSelf, level =
                 onMouseLeave={e => e.target.style.color = '#9aa0b8'}
                 onClick={() => setShowInput(v => !v)}>Reply</button>
             )}
-            {canDelete && (
+            {canDelete && !String(reply._id).startsWith('temp-') && (
               <button style={S.deleteBtn} onClick={async () => {
-                try { await postAPI.deleteReply(postId, commentId, reply._id); onDeleteSelf(reply._id); }
-                catch (err) { console.error(err); toast.error('Could not delete reply'); }
+                try {
+                  await postAPI.deleteReply(postId, commentId, reply._id);
+                  onDeleteSelf(reply._id);
+                } catch (err) {
+                  console.error(err);
+                  const msg = err?.response?.data?.message || 'Could not delete reply';
+                  toast.error(msg);
+                }
               }}>Delete</button>
             )}
           </div>

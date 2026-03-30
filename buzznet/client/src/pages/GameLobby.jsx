@@ -177,7 +177,7 @@ export default function GameLobby() {
             </div>
             <div className="form-group">
               <label className="form-label">
-              {createForm.gameType === 'draw' ? 'Rounds' : createForm.gameType === 'snake' ? 'Max Players' : 'Questions'}
+              {createForm.gameType === 'draw' ? 'Rounds' : 'Questions'}
             </label>
               <input
                 className="form-input"
