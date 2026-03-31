@@ -4,8 +4,8 @@ const sendEmail = async ({ to, subject, html }) => {
   const apiKey = process.env.BREVO_API_KEY;
 
   const body = JSON.stringify({
-    sender:   { name: "BuzzNet", email: process.env.EMAIL_USER || "netbuzz705@gmail.com" },
-    to:       [{ email: to }],
+    sender:      { name: "BuzzNet", email: process.env.EMAIL_USER || "netbuzz705@gmail.com" },
+    to:          [{ email: to }],
     subject,
     htmlContent: html,
   });
@@ -17,8 +17,8 @@ const sendEmail = async ({ to, subject, html }) => {
         path:     "/v3/smtp/email",
         method:   "POST",
         headers:  {
-          "api-key":       apiKey,
-          "Content-Type":  "application/json",
+          "api-key":        apiKey,
+          "Content-Type":   "application/json",
           "Content-Length": Buffer.byteLength(body),
         },
       },
@@ -40,6 +40,7 @@ const sendEmail = async ({ to, subject, html }) => {
   });
 };
 
+// ── OTP Email ──────────────────────────────────────────────────────────────────
 const sendOtpEmail = async (email, otp, username) => {
   const html = `
     <div style="font-family: 'Segoe UI', sans-serif; max-width: 480px; margin: 0 auto; background: #f4f6fb; padding: 32px 24px; border-radius: 16px;">
@@ -66,6 +67,7 @@ const sendOtpEmail = async (email, otp, username) => {
   await sendEmail({ to: email, subject: `${otp} is your BuzzNet verification code`, html });
 };
 
+// ── Password Reset Email ───────────────────────────────────────────────────────
 const sendPasswordResetEmail = async (email, otp, username) => {
   const html = `
     <div style="font-family: 'Segoe UI', sans-serif; max-width: 480px; margin: 0 auto; background: #f4f6fb; padding: 32px 24px; border-radius: 16px;">
@@ -92,9 +94,7 @@ const sendPasswordResetEmail = async (email, otp, username) => {
   await sendEmail({ to: email, subject: `${otp} is your BuzzNet password reset code`, html });
 };
 
-module.exports = { sendOtpEmail, sendPasswordResetEmail };
-
-// ── Notification emails ────────────────────────────────────────────────────────
+// ── Notification Email ─────────────────────────────────────────────────────────
 const sendNotificationEmail = async (email, username, type, fromUsername) => {
   const subjects = {
     newMessage:      `${fromUsername} sent you a message on BuzzNet`,
@@ -134,6 +134,7 @@ const sendNotificationEmail = async (email, username, type, fromUsername) => {
   await sendEmail({ to: email, subject: subjects[type] || 'New notification on BuzzNet', html });
 };
 
+// ── Single export at the bottom ────────────────────────────────────────────────
 module.exports = { sendOtpEmail, sendPasswordResetEmail, sendNotificationEmail };
 
 
