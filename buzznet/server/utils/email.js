@@ -1,5 +1,7 @@
-const https = require("https");
+const https       = require("https");
+const nodemailer  = require("nodemailer");
 
+// ── Brevo transporter (OTP + password reset) ───────────────────────────────────
 const sendEmail = async ({ to, subject, html }) => {
   const apiKey = process.env.BREVO_API_KEY;
 
@@ -40,7 +42,25 @@ const sendEmail = async ({ to, subject, html }) => {
   });
 };
 
-// ── OTP Email ──────────────────────────────────────────────────────────────────
+// ── Gmail transporter (notification emails) ────────────────────────────────────
+const gmailTransporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
+
+const sendEmailViaGmail = async ({ to, subject, html }) => {
+  await gmailTransporter.sendMail({
+    from: `"BuzzNet" <${process.env.EMAIL_USER}>`,
+    to,
+    subject,
+    html,
+  });
+};
+
+// ── OTP Email (Brevo) ──────────────────────────────────────────────────────────
 const sendOtpEmail = async (email, otp, username) => {
   const html = `
     <div style="font-family: 'Segoe UI', sans-serif; max-width: 480px; margin: 0 auto; background: #f4f6fb; padding: 32px 24px; border-radius: 16px;">
@@ -67,7 +87,7 @@ const sendOtpEmail = async (email, otp, username) => {
   await sendEmail({ to: email, subject: `${otp} is your BuzzNet verification code`, html });
 };
 
-// ── Password Reset Email ───────────────────────────────────────────────────────
+// ── Password Reset Email (Brevo) ───────────────────────────────────────────────
 const sendPasswordResetEmail = async (email, otp, username) => {
   const html = `
     <div style="font-family: 'Segoe UI', sans-serif; max-width: 480px; margin: 0 auto; background: #f4f6fb; padding: 32px 24px; border-radius: 16px;">
@@ -94,7 +114,7 @@ const sendPasswordResetEmail = async (email, otp, username) => {
   await sendEmail({ to: email, subject: `${otp} is your BuzzNet password reset code`, html });
 };
 
-// ── Notification Email ─────────────────────────────────────────────────────────
+// ── Notification Email (Gmail via nodemailer) ──────────────────────────────────
 const sendNotificationEmail = async (email, username, type, fromUsername) => {
   const subjects = {
     newMessage:      `${fromUsername} sent you a message on BuzzNet`,
@@ -131,11 +151,12 @@ const sendNotificationEmail = async (email, username, type, fromUsername) => {
       </div>
     </div>`;
 
-  await sendEmail({ to: email, subject: subjects[type] || 'New notification on BuzzNet', html });
+  await sendEmailViaGmail({ to: email, subject: subjects[type] || 'New notification on BuzzNet', html });
 };
 
-// ── Single export at the bottom ────────────────────────────────────────────────
+// ── Single export ──────────────────────────────────────────────────────────────
 module.exports = { sendOtpEmail, sendPasswordResetEmail, sendNotificationEmail };
+
 
 
 
