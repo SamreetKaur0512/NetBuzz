@@ -1,7 +1,8 @@
 const GameRoom = require("../models/GameRoom");
 
 const GRID        = 20;   // 20x20 grid
-const TICK_MS     = 150;  // game speed ms per tick
+const TICK_MS     = 150;  // game speed ms per tick (default)
+const SPEED_MAP   = { slow: 250, normal: 150, fast: 90, extreme: 50 };
 const FOOD_COUNT  = 5;    // food items on board at once
 
 const gameLoops   = new Map(); // roomCode → interval
@@ -242,7 +243,8 @@ function registerSnakeEvents(gameNS, socket) {
           clearInterval(cdInterval);
           gameNS.to(roomCode).emit('snakeCountdown', { count: 0 }); // "Go!"
           // Start game loop after countdown
-          const loop = setInterval(() => gameTick(gameNS, roomCode), TICK_MS);
+          const tickMs = SPEED_MAP[room.snakeSpeed] || TICK_MS;
+          const loop = setInterval(() => gameTick(gameNS, roomCode), tickMs);
           gameLoops.set(roomCode, loop);
         }
       }, 1000);

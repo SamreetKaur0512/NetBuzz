@@ -58,6 +58,11 @@ const gameRoomSchema = new mongoose.Schema(
       type: Number,      // seconds
       default: 20,
     },
+    snakeSpeed: {
+      type: String,
+      enum: ['slow', 'normal', 'fast', 'extreme'],
+      default: 'normal',
+    },
     // snapshot of questions used in this session (generated at startGame)
     questions: {
       type: [mongoose.Schema.Types.Mixed],

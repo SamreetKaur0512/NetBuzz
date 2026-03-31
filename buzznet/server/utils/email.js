@@ -1,24 +1,20 @@
 const https = require("https");
 
 const sendEmail = async ({ to, subject, html }) => {
-  const apiKey = process.env.BREVO_API_KEY;
+  const apiKey = process.env.RESEND_API_KEY;
+  const fromAddress = process.env.EMAIL_FROM || "BuzzNet <onboarding@resend.dev>";
 
-  const body = JSON.stringify({
-    sender:   { name: "BuzzNet", email: process.env.EMAIL_USER || "netbuzz705@gmail.com" },
-    to:       [{ email: to }],
-    subject,
-    htmlContent: html,
-  });
+  const body = JSON.stringify({ from: fromAddress, to, subject, html });
 
   return new Promise((resolve, reject) => {
     const req = https.request(
       {
-        hostname: "api.brevo.com",
-        path:     "/v3/smtp/email",
-        method:   "POST",
-        headers:  {
-          "api-key":       apiKey,
-          "Content-Type":  "application/json",
+        hostname: "api.resend.com",
+        path: "/emails",
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
           "Content-Length": Buffer.byteLength(body),
         },
       },
@@ -26,10 +22,11 @@ const sendEmail = async ({ to, subject, html }) => {
         let data = "";
         res.on("data", (chunk) => (data += chunk));
         res.on("end", () => {
+          const parsed = JSON.parse(data);
           if (res.statusCode >= 200 && res.statusCode < 300) {
-            resolve(JSON.parse(data));
+            resolve(parsed);
           } else {
-            reject(new Error(`Brevo error ${res.statusCode}: ${data}`));
+            reject(new Error(`Resend error ${res.statusCode}: ${JSON.stringify(parsed)}`));
           }
         });
       }
@@ -93,4 +90,5 @@ const sendPasswordResetEmail = async (email, otp, username) => {
 };
 
 module.exports = { sendOtpEmail, sendPasswordResetEmail };
+
 

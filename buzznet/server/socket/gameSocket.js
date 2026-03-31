@@ -156,6 +156,7 @@ function registerGameSocket(gameNS) {
           maxPlayers       = 8,
           questionCount    = 10,
           questionTimeLimit = 20,
+          snakeSpeed       = 'normal',
         } = data || {};
 
         // Generate unique code
@@ -172,6 +173,7 @@ function registerGameSocket(gameNS) {
           maxPlayers,
           totalQuestions: questionCount,
           questionTimeLimit,
+          snakeSpeed,
           players: [{ userId, username, score: 0, ready: false }],
         });
 

@@ -143,7 +143,7 @@ export default function AiQuizRoom({ room, roomCode, players: initPlayers, gameS
   const [subcategories,   setSubcategories]  = useState([]);
   const [canDeepen,       setCanDeepen]      = useState(false);
   const [loadingMsg,      setLoadingMsg]     = useState('');
-  const [questionCount,   setQuestionCount]  = useState(10);
+  const [questionCount,   setQuestionCount]  = useState(room?.totalQuestions || 10);
   const [readyTopic,      setReadyTopic]     = useState('');
   const [searchTerm,      setSearchTerm]     = useState('');
   const [fieldSearch,     setFieldSearch]    = useState('');
@@ -608,18 +608,8 @@ Return ONLY a valid JSON array:
               Choose a specific option to go deeper, or generate questions about the current topic:
             </div>
 
-            {/* Question count + generate general */}
+            {/* Generate general questions button — count fixed from room settings */}
             <div style={{ display:'flex', gap:10, alignItems:'center', marginBottom:16, flexWrap:'wrap' }}>
-              <div style={{ display:'flex', alignItems:'center', gap:8, background:'var(--bg-elevated)', borderRadius:10, padding:'8px 14px', border:'1px solid var(--border)' }}>
-                <span style={{ fontSize:13, color:'var(--text-muted)' }}>Questions:</span>
-                <input
-                  type="number" min={3} max={50}
-                  value={questionCount}
-                  onChange={e => setQuestionCount(Math.min(50, Math.max(3, parseInt(e.target.value)||10)))}
-                  style={{ width:60, padding:'4px 8px', borderRadius:8, border:'1px solid var(--border)', background:'transparent', color:'var(--text-primary)', fontSize:14, fontWeight:700, textAlign:'center' }}
-                />
-                <span style={{ fontSize:11, color:'var(--text-muted)' }}>(3-50)</span>
-              </div>
               <button onClick={handleGeneralQuestions} style={{
                 padding:'8px 18px', borderRadius:20, border:'2px solid var(--yellow)',
                 background:'rgba(var(--yellow),0.08)', color:'var(--yellow)',

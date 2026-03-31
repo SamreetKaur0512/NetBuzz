@@ -25,7 +25,7 @@ export default function GameLobby() {
   const [creating, setCreating]         = useState(false);
   const [joinCode, setJoinCode]         = useState('');
   const [createForm, setCreateForm]     = useState({
-    gameType: 'wyr', maxPlayers: 8, questionCount: 10, questionTimeLimit: 120,
+    gameType: 'wyr', maxPlayers: 8, questionCount: 10, questionTimeLimit: 120, snakeSpeed: 'normal',
   });
   const roomsRef = useRef(null);
 
@@ -175,17 +175,35 @@ export default function GameLobby() {
                 onChange={e => setCreateForm(p => ({ ...p, maxPlayers: +e.target.value }))}
               />
             </div>
-            <div className="form-group">
-              <label className="form-label">
-              {createForm.gameType === 'draw' ? 'Rounds' : 'Questions'}
-            </label>
-              <input
-                className="form-input"
-                type="number" min={5} max={20}
-                value={createForm.questionCount}
-                onChange={e => setCreateForm(p => ({ ...p, questionCount: +e.target.value }))}
-              />
-            </div>
+            {/* Snake gets a Speed field; ttt and aiquiz get nothing; others get Questions/Rounds */}
+            {createForm.gameType === 'snake' && (
+              <div className="form-group">
+                <label className="form-label">Speed</label>
+                <select
+                  className="form-input"
+                  value={createForm.snakeSpeed || 'normal'}
+                  onChange={e => setCreateForm(p => ({ ...p, snakeSpeed: e.target.value }))}
+                >
+                  <option value="slow">Slow (easy)</option>
+                  <option value="normal">Normal</option>
+                  <option value="fast">Fast</option>
+                  <option value="extreme">Extreme</option>
+                </select>
+              </div>
+            )}
+            {(createForm.gameType !== 'ttt' && createForm.gameType !== 'snake' && createForm.gameType !== 'aiquiz') && (
+              <div className="form-group">
+                <label className="form-label">
+                  {createForm.gameType === 'draw' ? 'Rounds' : 'Questions'}
+                </label>
+                <input
+                  className="form-input"
+                  type="number" min={5} max={20}
+                  value={createForm.questionCount}
+                  onChange={e => setCreateForm(p => ({ ...p, questionCount: +e.target.value }))}
+                />
+              </div>
+            )}
           </div>
 
           <div className="form-group">
