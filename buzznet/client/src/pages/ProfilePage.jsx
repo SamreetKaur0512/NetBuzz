@@ -17,12 +17,13 @@ export default function ProfilePage() {
   const [profile, setProfile]   = useState(null);
   const [posts, setPosts]       = useState([]);
   const [loading, setLoading]   = useState(true);
-  const [editOpen, setEditOpen]   = useState(false);
-  const [notifOpen, setNotifOpen] = useState(false);
+  const [editOpen,      setEditOpen]      = useState(false);
+  const [notifOpen,     setNotifOpen]     = useState(false);
   const [acceptedNotif, setAcceptedNotif] = useState(null);
   const [notifSettings, setNotifSettings] = useState({
     followRequest: false, followAccepted: false,
-    messageRequest: false, messageAccepted: false, groupInvite: false,
+    messageRequest: false, messageAccepted: false,
+    newMessage: false, groupInvite: false,
   });
   const [editForm, setEditForm] = useState({ username: '', bio: '', isPrivate: false });
   const [editFile, setEditFile] = useState(null);
@@ -48,19 +49,24 @@ export default function ProfilePage() {
 
   const isOwn = user?._id === id;
 
-  // Load notification settings from profile
+  // Load notification settings from profile when profile loads
   useEffect(() => {
-    if (profile?.emailNotifications) {
-      setNotifSettings(s => ({ ...s, ...profile.emailNotifications }));
+    if (profile?.emailNotifications && isOwn) {
+      setNotifSettings({
+        followRequest:   !!profile.emailNotifications.followRequest,
+        followAccepted:  !!profile.emailNotifications.followAccepted,
+        messageRequest:  !!profile.emailNotifications.messageRequest,
+        messageAccepted: !!profile.emailNotifications.messageAccepted,
+        newMessage:      !!profile.emailNotifications.newMessage,
+        groupInvite:     !!profile.emailNotifications.groupInvite,
+      });
     }
-  }, [profile]);
+  }, [profile, isOwn]);
 
-  // Listen for follow request accepted (persistent modal)
+  // Listen for follow request accepted → show persistent modal
   useEffect(() => {
     if (!chatSocket) return;
-    const handler = ({ by }) => {
-      setAcceptedNotif({ type: 'follow', username: by.username });
-    };
+    const handler = ({ by }) => setAcceptedNotif({ type: 'follow', username: by.username });
     chatSocket.on('followRequestAccepted', handler);
     return () => chatSocket.off('followRequestAccepted', handler);
   }, [chatSocket]);
@@ -147,16 +153,10 @@ export default function ProfilePage() {
 
   const handleSaveNotifSettings = async () => {
     try {
-      const fd = new FormData();
-      fd.append('emailNotifications[followRequest]',   notifSettings.followRequest);
-      fd.append('emailNotifications[followAccepted]',  notifSettings.followAccepted);
-      fd.append('emailNotifications[messageRequest]',  notifSettings.messageRequest);
-      fd.append('emailNotifications[messageAccepted]', notifSettings.messageAccepted);
-      fd.append('emailNotifications[groupInvite]',     notifSettings.groupInvite);
-      const res = await userAPI.update(id, fd);
+      const res = await userAPI.updateNotifications(id, notifSettings);
       updateUser(res.data.user);
-      toast.success('Notification settings saved!');
       setNotifOpen(false);
+      toast.success('Notification settings saved!');
     } catch (e) { toast.error('Failed to save settings'); }
   };
 
@@ -413,14 +413,14 @@ export default function ProfilePage() {
         </Modal>
       )}
 
-      {/* ── Follow Accepted Notification Modal ─────────────────────── */}
+      {/* ── Accepted Notification Modal ───────────────────────────── */}
       {acceptedNotif && (
         <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.6)', zIndex:9999,
           display:'flex', alignItems:'center', justifyContent:'center' }}>
           <div style={{ background:'var(--bg-card,#fff)', borderRadius:20, padding:'32px 28px',
             maxWidth:340, width:'90%', textAlign:'center', boxShadow:'0 8px 40px rgba(0,0,0,0.3)' }}>
             <div style={{ fontSize:48, marginBottom:12 }}>🎉</div>
-            <div style={{ fontSize:18, fontWeight:700, marginBottom:8 }}>
+            <div style={{ fontSize:18, fontWeight:700, marginBottom:8, color:'var(--text-primary)' }}>
               {acceptedNotif.type === 'follow' ? 'Follow Request Accepted!' : 'Message Request Accepted!'}
             </div>
             <div style={{ fontSize:15, color:'var(--text-secondary)', marginBottom:24, lineHeight:1.6 }}>
@@ -430,9 +430,7 @@ export default function ProfilePage() {
                 : 'accepted your message request. You can now chat!'}
             </div>
             <button className="btn btn-primary" style={{ padding:'10px 36px', fontSize:15, fontWeight:700 }}
-              onClick={() => setAcceptedNotif(null)}>
-              OK
-            </button>
+              onClick={() => setAcceptedNotif(null)}>OK</button>
           </div>
         </div>
       )}
@@ -441,7 +439,7 @@ export default function ProfilePage() {
       {notifOpen && (
         <Modal title="🔔 Email Notifications" onClose={() => setNotifOpen(false)}>
           <div style={{ fontSize:13, color:'var(--text-muted)', marginBottom:16, lineHeight:1.6 }}>
-            Choose which events send you an email. All are <strong>off by default</strong>.
+            Get an email when these things happen. All <strong>off by default</strong>.
             Emails go to <strong>{profile?.email}</strong>.
           </div>
           {[
@@ -449,26 +447,21 @@ export default function ProfilePage() {
             { key:'followAccepted',  label:'Someone accepts your follow request' },
             { key:'messageRequest',  label:'Someone sends you a message request' },
             { key:'messageAccepted', label:'Someone accepts your message request' },
+            { key:'newMessage',      label:'Someone sends you a new message' },
             { key:'groupInvite',     label:'Someone invites you to a group' },
           ].map(({ key, label }) => (
             <div key={key} style={{ display:'flex', alignItems:'center', justifyContent:'space-between',
               padding:'12px 0', borderBottom:'1px solid var(--border)' }}>
-              <span style={{ fontSize:14 }}>{label}</span>
-              <label style={{ position:'relative', display:'inline-block', width:44, height:24, cursor:'pointer' }}>
-                <input type="checkbox" checked={notifSettings[key]}
-                  onChange={e => setNotifSettings(s => ({ ...s, [key]: e.target.checked }))}
-                  style={{ opacity:0, width:0, height:0 }} />
-                <span style={{
-                  position:'absolute', inset:0, borderRadius:12, transition:'background 0.2s',
-                  background: notifSettings[key] ? '#F7A325' : 'var(--border)',
-                }}>
-                  <span style={{
-                    position:'absolute', top:3, left: notifSettings[key] ? 22 : 3,
-                    width:18, height:18, borderRadius:'50%', background:'#fff',
-                    transition:'left 0.2s', boxShadow:'0 1px 4px rgba(0,0,0,0.2)',
-                  }} />
-                </span>
-              </label>
+              <span style={{ fontSize:14, color:'var(--text-primary)' }}>{label}</span>
+              <div
+                onClick={() => setNotifSettings(s => ({ ...s, [key]: !s[key] }))}
+                style={{ position:'relative', width:44, height:24, borderRadius:12, cursor:'pointer',
+                  background: notifSettings[key] ? '#F7A325' : 'var(--border)', transition:'background 0.2s', flexShrink:0 }}>
+                <div style={{ position:'absolute', top:3,
+                  left: notifSettings[key] ? 22 : 3,
+                  width:18, height:18, borderRadius:'50%', background:'#fff',
+                  transition:'left 0.2s', boxShadow:'0 1px 4px rgba(0,0,0,0.2)' }} />
+              </div>
             </div>
           ))}
           <div style={{ display:'flex', gap:10, marginTop:16 }}>

@@ -48,6 +48,7 @@ export const userAPI = {
   getById:               (id)         => api.get(`/api/users/${id}`),
   getMe:                 ()           => api.get('/api/users/me'),
   update:                (id, data)   => api.put(`/api/users/update/${id}`, data, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  updateNotifications:   (id, data)   => api.put(`/api/users/update/${id}/notifications`, data),
   follow:                (id)         => api.put(`/api/users/follow/${id}`),
   unfollow:              (id)         => api.put(`/api/users/unfollow/${id}`),
   block:                 (id)         => api.put(`/api/users/block/${id}`),

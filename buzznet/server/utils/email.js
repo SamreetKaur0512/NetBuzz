@@ -97,6 +97,7 @@ module.exports = { sendOtpEmail, sendPasswordResetEmail };
 // ── Notification emails ────────────────────────────────────────────────────────
 const sendNotificationEmail = async (email, username, type, fromUsername) => {
   const subjects = {
+    newMessage:      `${fromUsername} sent you a message on BuzzNet`,
     followRequest:   `${fromUsername} sent you a follow request on BuzzNet`,
     followAccepted:  `${fromUsername} accepted your follow request on BuzzNet`,
     messageRequest:  `${fromUsername} sent you a message request on BuzzNet`,
@@ -104,6 +105,7 @@ const sendNotificationEmail = async (email, username, type, fromUsername) => {
     groupInvite:     `${fromUsername} invited you to a group on BuzzNet`,
   };
   const bodies = {
+    newMessage:      `<p>${fromUsername} sent you a new message. Open BuzzNet to reply.</p>`,
     followRequest:   `<p>${fromUsername} wants to follow you. Open BuzzNet to accept or decline.</p>`,
     followAccepted:  `<p>Great news! ${fromUsername} accepted your follow request. You can now see their posts.</p>`,
     messageRequest:  `<p>${fromUsername} wants to message you. Open BuzzNet to accept or decline.</p>`,
@@ -133,6 +135,7 @@ const sendNotificationEmail = async (email, username, type, fromUsername) => {
 };
 
 module.exports = { sendOtpEmail, sendPasswordResetEmail, sendNotificationEmail };
+
 
 
 

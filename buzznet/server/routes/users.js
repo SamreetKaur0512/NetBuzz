@@ -29,6 +29,7 @@ router.put("/follow-requests/:requestId/reject",   verifyToken,  rejectFollowReq
 router.delete("/delete-account",                   verifyToken,  deleteAccount);
 
 router.get("/:id",            optionalAuth, getUserById);
+router.put("/update/:id/notifications", verifyToken, updateNotifications);
 router.put("/update/:id",     verifyToken,  upload.single("profilePicture"), handleMulterError, updateUser);
 router.put("/follow/:id",     verifyToken,  followUser);
 router.put("/unfollow/:id",   verifyToken,  unfollowUser);

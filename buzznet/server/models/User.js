@@ -54,6 +54,7 @@ const userSchema = new mongoose.Schema(
       followAccepted:  { type: Boolean, default: false },
       messageRequest:  { type: Boolean, default: false },
       messageAccepted: { type: Boolean, default: false },
+      newMessage:      { type: Boolean, default: false },
       groupInvite:     { type: Boolean, default: false },
     },
   },

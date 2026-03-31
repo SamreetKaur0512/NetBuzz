@@ -123,7 +123,6 @@ const getConversations = async (req, res, next) => {
       ],
     }).lean();
 
-    // Deduplicate partnerIds — both A→B and B→A accepted creates duplicates
     const seen = new Set();
     const partnerIds = [];
     for (const r of accepted) {
