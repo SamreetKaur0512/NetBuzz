@@ -131,11 +131,21 @@ function registerChatSocket(chatNS) {
             chatNS.to(`user:${receiverId}`).emit("receiveMessage", populated);
           }
 
-          chatNS.to(`user:${receiverId}`).emit("newMessageNotification", {
+         chatNS.to(`user:${receiverId}`).emit("newMessageNotification", {
             conversationId,
             from: { _id: socket.user._id, username: socket.user.username, profilePicture: socket.user.profilePicture },
             preview: messageText.trim().substring(0, 60),
           });
+
+          // ✅ Email notification for new message
+          try {
+            const User = require("../models/User");
+            const receiver = await User.findById(receiverId).select("email username emailNotifications");
+            if (receiver?.emailNotifications?.newMessage) {
+              const { sendNotificationEmail } = require("../utils/email");
+              await sendNotificationEmail(receiver.email, receiver.username, "newMessage", socket.user.username);
+            }
+          } catch (e) { console.error("[email notify newMessage]", e.message); }
         }
 
         if (typeof ack === "function") ack({ success: true, message: populated });

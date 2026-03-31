@@ -131,9 +131,17 @@ const followUser = async (req, res, next) => {
           return res.status(400).json({ success: false, message: "Follow request already sent." });
         existing.status = "pending";
         await existing.save();
-        return res.json({ success: true, requested: true, message: "Follow request sent." });
+      } else {
+        await FollowRequest.create({ senderId: currentUserId, receiverId: targetId });
       }
-      await FollowRequest.create({ senderId: currentUserId, receiverId: targetId });
+      // ✅ Email notification to the receiver
+      try {
+        const receiver = await User.findById(targetId).select("email username emailNotifications");
+        if (receiver?.emailNotifications?.followRequest) {
+          const { sendNotificationEmail } = require("../utils/email");
+          await sendNotificationEmail(receiver.email, receiver.username, "followRequest", req.user.username);
+        }
+      } catch (e) { console.error("[email notify]", e.message); }
       return res.json({ success: true, requested: true, message: "Follow request sent." });
     }
 

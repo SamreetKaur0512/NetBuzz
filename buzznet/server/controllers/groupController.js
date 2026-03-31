@@ -196,6 +196,15 @@ const inviteMember = async (req, res, next) => {
     const io = req.app.get("io");
     io.of("/chat").to(`user:${targetMongoId}`).emit("groupInvite", populated);
 
+    // ✅ Email notification for group invite
+    try {
+      const invitedUser = await User.findById(targetMongoId).select("email username emailNotifications");
+      if (invitedUser?.emailNotifications?.groupInvite) {
+        const { sendNotificationEmail } = require("../utils/email");
+        await sendNotificationEmail(invitedUser.email, invitedUser.username, "groupInvite", req.user.username);
+      }
+    } catch (e) { console.error("[email notify groupInvite]", e.message); }
+
     res.json({ success: true, message: `Invite sent to ${targetUser.username}.`, invite: populated });
   } catch (err) { next(err); }
 };
