@@ -6,7 +6,7 @@ const {
   getUserById, updateUser,
   followUser, unfollowUser,
   cancelFollowRequest, getFollowRequests, acceptFollowRequest, rejectFollowRequest,
-  blockUser, getBlockedUsers, searchUsers, deleteAccount,
+  blockUser, getBlockedUsers, searchUsers, deleteAccount, updateNotifications,
 } = require("../controllers/userController");
 
 router.get("/me", verifyToken, async (req, res) => {
