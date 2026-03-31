@@ -432,55 +432,66 @@ const deleteComment = async (req, res, next) => {
 
 // ─── DELETE /api/posts/:postId/comment/:commentId/reply/:replyId ──────────────
 const deleteReply = async (req, res, next) => {
-  try {
-    const { postId, commentId, replyId } = req.params;
+  const MAX_RETRIES = 3;
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    try {
+      const { postId, commentId, replyId } = req.params;
 
-    const post = await Post.findById(postId);
-    if (!post) return res.status(404).json({ success: false, message: "Post not found." });
+      const post = await Post.findById(postId);
+      if (!post) return res.status(404).json({ success: false, message: "Post not found." });
 
-    const comment = post.comments.id(commentId);
-    if (!comment) return res.status(404).json({ success: false, message: "Comment not found." });
+      const comment = post.comments.id(commentId);
+      if (!comment) return res.status(404).json({ success: false, message: "Comment not found." });
 
-    // Search at any depth — replies can be nested inside replies
-    const reply = findReplyRecursively(comment.replies, replyId);
-    if (!reply) return res.status(404).json({ success: false, message: "Reply not found." });
+      const reply = findReplyRecursively(comment.replies, replyId);
+      if (!reply) return res.status(404).json({ success: false, message: "Reply not found." });
 
-    const isReplyOwner = reply.userId.toString() === req.user._id.toString();
-    const isPostOwner  = post.userId.toString()  === req.user._id.toString();
-    if (!isReplyOwner && !isPostOwner)
-      return res.status(403).json({ success: false, message: "Not authorized." });
+      const isReplyOwner = reply.userId.toString() === req.user._id.toString();
+      const isPostOwner  = post.userId.toString()  === req.user._id.toString();
+      if (!isReplyOwner && !isPostOwner)
+        return res.status(403).json({ success: false, message: "Not authorized." });
 
-    removeReplyRecursively(comment.replies, replyId);
-    post.markModified('comments');
-    await post.save();
-    res.json({ success: true, message: "Reply deleted." });
-  } catch (err) { next(err); }
+      removeReplyRecursively(comment.replies, replyId);
+      post.markModified('comments');
+      await post.save();
+      return res.json({ success: true, message: "Reply deleted." });
+    } catch (err) {
+      // Retry on Mongoose VersionError (concurrent save conflict)
+      if (err.name === 'VersionError' && attempt < MAX_RETRIES - 1) continue;
+      return next(err);
+    }
+  }
 };
 
 // ─── DELETE /api/posts/:postId/comment/:commentId/reply/:replyId/reply/:nestedReplyId ──────────────
 const deleteNestedReply = async (req, res, next) => {
-  try {
-    const { postId, commentId, replyId, nestedReplyId } = req.params;
-    const post = await Post.findById(postId);
-    if (!post) return res.status(404).json({ success: false, message: "Post not found." });
+  const MAX_RETRIES = 3;
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    try {
+      const { postId, commentId, replyId, nestedReplyId } = req.params;
+      const post = await Post.findById(postId);
+      if (!post) return res.status(404).json({ success: false, message: "Post not found." });
 
-    const comment = post.comments.id(commentId);
-    if (!comment) return res.status(404).json({ success: false, message: "Comment not found." });
+      const comment = post.comments.id(commentId);
+      if (!comment) return res.status(404).json({ success: false, message: "Comment not found." });
 
-    // Find the target reply to check ownership, then remove it recursively
-    const nestedReply = findReplyRecursively(comment.replies, nestedReplyId);
-    if (!nestedReply) return res.status(404).json({ success: false, message: "Nested reply not found." });
+      const nestedReply = findReplyRecursively(comment.replies, nestedReplyId);
+      if (!nestedReply) return res.status(404).json({ success: false, message: "Nested reply not found." });
 
-    const isReplyOwner = nestedReply.userId.toString() === req.user._id.toString();
-    const isPostOwner  = post.userId.toString()  === req.user._id.toString();
-    if (!isReplyOwner && !isPostOwner)
-      return res.status(403).json({ success: false, message: "Not authorized." });
+      const isReplyOwner = nestedReply.userId.toString() === req.user._id.toString();
+      const isPostOwner  = post.userId.toString()  === req.user._id.toString();
+      if (!isReplyOwner && !isPostOwner)
+        return res.status(403).json({ success: false, message: "Not authorized." });
 
-    removeReplyRecursively(comment.replies, nestedReplyId);
-    post.markModified('comments');
-    await post.save();
-    res.json({ success: true, message: "Nested reply deleted." });
-  } catch (err) { next(err); }
+      removeReplyRecursively(comment.replies, nestedReplyId);
+      post.markModified('comments');
+      await post.save();
+      return res.json({ success: true, message: "Nested reply deleted." });
+    } catch (err) {
+      if (err.name === 'VersionError' && attempt < MAX_RETRIES - 1) continue;
+      return next(err);
+    }
+  }
 };
 
 module.exports = { createPost, deletePost, likePost, commentOnPost, replyToComment, likeComment, getFeed, getExplore, getUserPosts, deleteComment, deleteReply, deleteNestedReply };

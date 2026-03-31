@@ -419,15 +419,14 @@ export default function SnakeRoom({ room, roomCode, players: initPlayers, gameSo
           {countdown !== null && (
             <div style={{
               position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: 'rgba(0,0,0,0.45)', borderRadius: 8,
+              background: 'transparent', borderRadius: 8, pointerEvents: 'none',
             }}>
               <div style={{
-                fontSize: countdown === 0 ? 64 : 96,
+                fontSize: countdown === 0 ? 72 : 120,
                 fontWeight: 900, fontFamily: 'Poppins, sans-serif',
                 color: countdown === 0 ? '#00D68F' : '#FFD700',
-                textShadow: '0 4px 24px rgba(0,0,0,0.6)',
+                textShadow: '0 0 30px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,1), 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000',
                 lineHeight: 1,
-                animation: 'none',
               }}>
                 {countdown === 0 ? 'Go! 🐍' : countdown}
               </div>

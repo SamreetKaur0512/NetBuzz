@@ -191,7 +191,7 @@ export default function GameLobby() {
                 </select>
               </div>
             )}
-            {(createForm.gameType !== 'ttt' && createForm.gameType !== 'snake' && createForm.gameType !== 'aiquiz') && (
+            {(createForm.gameType !== 'ttt' && createForm.gameType !== 'snake') && (
               <div className="form-group">
                 <label className="form-label">
                   {createForm.gameType === 'draw' ? 'Rounds' : 'Questions'}
