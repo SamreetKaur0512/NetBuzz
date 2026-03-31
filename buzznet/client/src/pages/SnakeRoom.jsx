@@ -183,8 +183,11 @@ export default function SnakeRoom({ room, roomCode, players: initPlayers, gameSo
     gameSocket.on('playerLeft', ({ players: p }) => setPlayers(p));
 
     gameSocket.on('snakeCountdown', ({ count }) => {
-      setCountdown(count); // 3,2,1 then 0=Go
-      if (count === 0) setTimeout(() => setCountdown(null), 800); // hide "Go!" after 0.8s
+      setCountdown(count);
+      if (count === 0) {
+        setPhase('playing'); // enable keyboard controls
+        setTimeout(() => setCountdown(null), 1000);
+      }
     });
 
     gameSocket.on('snakeGameStarted', ({ snakes: s, food: f, timeLimit }) => {
@@ -193,8 +196,7 @@ export default function SnakeRoom({ room, roomCode, players: initPlayers, gameSo
       setTimeLeft(timeLimit);
       setAmAlive(true);
       setMyScore(0);
-      setPhase('playing');
-      // Draw initial board immediately so players see positions
+      setPhase('countdown'); // show board but don't allow movement yet
       drawGame(s, f);
     });
 
@@ -378,7 +380,7 @@ export default function SnakeRoom({ room, roomCode, players: initPlayers, gameSo
   }
 
   // ── Playing ──────────────────────────────────────────────────────────────────
-  if (phase === 'playing') {
+  if (phase === 'playing' || phase === 'countdown') {
     return (
       <div>
         {/* Eliminated message */}
@@ -419,14 +421,15 @@ export default function SnakeRoom({ room, roomCode, players: initPlayers, gameSo
           {countdown !== null && (
             <div style={{
               position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: 'transparent', borderRadius: 8, pointerEvents: 'none',
+              background: 'rgba(0,0,0,0.45)', borderRadius: 8,
             }}>
               <div style={{
-                fontSize: countdown === 0 ? 72 : 120,
+                fontSize: countdown === 0 ? 64 : 96,
                 fontWeight: 900, fontFamily: 'Poppins, sans-serif',
                 color: countdown === 0 ? '#00D68F' : '#FFD700',
-                textShadow: '0 0 30px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,1), 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000',
+                textShadow: '0 4px 24px rgba(0,0,0,0.6)',
                 lineHeight: 1,
+                animation: 'none',
               }}>
                 {countdown === 0 ? 'Go! 🐍' : countdown}
               </div>

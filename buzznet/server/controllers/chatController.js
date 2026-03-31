@@ -25,6 +25,31 @@ const sendChatRequest = async (req, res, next) => {
       return res.status(403).json({ success: false, message: "Cannot send request to this user." });
     }
 
+    // Check if the OTHER person already sent a request that was accepted
+    // (meaning they can already message each other — no new request needed)
+    const reverseAccepted = await ChatRequest.findOne({
+      senderId: receiverId, receiverId: senderId, status: "accepted"
+    });
+    if (reverseAccepted) {
+      return res.status(409).json({
+        success: false,
+        already_connected: true,
+        message: "You can already message this user directly — they accepted your message request, no need to send a new one!",
+      });
+    }
+
+    // Check reverse pending — don't allow sending if other person already sent a pending request
+    const reversePending = await ChatRequest.findOne({
+      senderId: receiverId, receiverId: senderId, status: "pending"
+    });
+    if (reversePending) {
+      return res.status(409).json({
+        success: false,
+        reverse_pending: true,
+        message: "This user has already sent you a message request — check your Requests tab to accept it!",
+      });
+    }
+
     // Upsert: if rejected before, allow re-sending
     const existing = await ChatRequest.findOne({ senderId, receiverId });
     if (existing) {
@@ -32,7 +57,7 @@ const sendChatRequest = async (req, res, next) => {
         return res.status(409).json({ success: false, message: "Chat request already pending." });
       }
       if (existing.status === "accepted") {
-        return res.status(409).json({ success: false, message: "Chat already active with this user." });
+        return res.status(409).json({ success: false, message: "You can already message this user directly!" });
       }
       // Re-send after rejection
       existing.status = "pending";

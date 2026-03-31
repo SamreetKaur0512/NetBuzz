@@ -232,7 +232,7 @@ function registerSnakeEvents(gameNS, socket) {
         myUserId: userId,
       });
 
-      // 3-second countdown before movement starts
+      // 6-second countdown (3 → 2 → 1 → Go!, 2s each)
       let count = 3;
       gameNS.to(roomCode).emit('snakeCountdown', { count });
       const cdInterval = setInterval(() => {
@@ -247,7 +247,7 @@ function registerSnakeEvents(gameNS, socket) {
           const loop = setInterval(() => gameTick(gameNS, roomCode), tickMs);
           gameLoops.set(roomCode, loop);
         }
-      }, 1000);
+      }, 2000);
 
       if (typeof ack === 'function') ack({ success: true });
     } catch (err) {

@@ -519,15 +519,16 @@ export default function ChatPage() {
         <div className="chat-sidebar-header">
           <div className="chat-sidebar-title">Messages</div>
           <div style={{ display: 'flex', gap: 6 }}>
-            <button className="btn btn-secondary btn-sm" style={{ position: 'relative', fontSize: 12, padding: '4px 10px', lineHeight: 1.3, overflow: 'visible' }}
+            <button className="btn btn-secondary btn-sm" style={{ position: 'relative', fontSize: 12, padding: '4px 10px', lineHeight: 1.3, overflow: 'visible', display: 'flex', alignItems: 'center', gap: 6 }}
               onClick={() => setShowMsgReqs(true)}>
-              <div>Requests</div>
-              <div style={{ fontSize: 9, color: 'var(--text-muted)', fontWeight: 400, marginTop: 1 }}></div>
+              <span>Requests</span>
               {msgRequests.length > 0 && (
-                <span style={{ position: 'absolute', top: -8, right: -8, background: '#e74c3c',
-                  color: '#fff', borderRadius: '50%', minWidth: 18, height: 18, fontSize: 11,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontWeight: 700, padding: '0 3px', zIndex: 10, lineHeight: 1 }}>
+                <span style={{
+                  background: '#e74c3c', color: '#fff', borderRadius: 10,
+                  minWidth: 20, height: 20, fontSize: 11,
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  fontWeight: 700, padding: '0 5px', lineHeight: 1, flexShrink: 0,
+                }}>
                   {msgRequests.length}
                 </span>
               )}
