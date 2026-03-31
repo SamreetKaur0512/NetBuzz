@@ -123,9 +123,14 @@ const getConversations = async (req, res, next) => {
       ],
     }).lean();
 
-    const partnerIds = accepted.map((r) =>
-      r.senderId.toString() === userId.toString() ? r.receiverId : r.senderId
-    );
+    // Deduplicate partnerIds — both A→B and B→A accepted creates duplicates
+    const seen = new Set();
+    const partnerIds = [];
+    for (const r of accepted) {
+      const partnerId = r.senderId.toString() === userId.toString() ? r.receiverId : r.senderId;
+      const key = partnerId.toString();
+      if (!seen.has(key)) { seen.add(key); partnerIds.push(partnerId); }
+    }
 
     const conversations = await Promise.all(
       partnerIds.map(async (partnerId) => {

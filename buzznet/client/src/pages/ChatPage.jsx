@@ -519,27 +519,26 @@ export default function ChatPage() {
         <div className="chat-sidebar-header">
           <div className="chat-sidebar-title">Messages</div>
           <div style={{ display: 'flex', gap: 6 }}>
-            <button className="btn btn-secondary btn-sm" style={{ position: 'relative', fontSize: 12, padding: '4px 10px', lineHeight: 1.3, overflow: 'visible', display: 'flex', alignItems: 'center', gap: 6 }}
+            <button className="btn btn-secondary btn-sm"
+              style={{ fontSize: 12, padding: '4px 10px', display: 'flex', alignItems: 'center', gap: 6 }}
               onClick={() => setShowMsgReqs(true)}>
-              <span>Requests</span>
+              Requests
               {msgRequests.length > 0 && (
-                <span style={{
-                  background: '#e74c3c', color: '#fff', borderRadius: 10,
-                  minWidth: 20, height: 20, fontSize: 11,
-                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                  fontWeight: 700, padding: '0 5px', lineHeight: 1, flexShrink: 0,
-                }}>
+                <span style={{ background: '#e74c3c', color: '#fff', borderRadius: 10,
+                  minWidth: 20, height: 20, fontSize: 11, display: 'inline-flex',
+                  alignItems: 'center', justifyContent: 'center', fontWeight: 700, padding: '0 5px' }}>
                   {msgRequests.length}
                 </span>
               )}
             </button>
             {myInvites.length > 0 && (
-              <button className="btn btn-secondary btn-sm" style={{ position: 'relative', fontSize: 12, padding: '4px 10px' }}
+              <button className="btn btn-secondary btn-sm"
+                style={{ fontSize: 12, padding: '4px 10px', display: 'flex', alignItems: 'center', gap: 6 }}
                 onClick={() => setShowInvites(true)}>
                 Invites
-                <span style={{ position: 'absolute', top: -4, right: -4, background: 'var(--yellow)',
-                  color: '#fff', borderRadius: '50%', width: 16, height: 16, fontSize: 10,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ background: 'var(--yellow)', color: '#1a1d2e', borderRadius: 10,
+                  minWidth: 20, height: 20, fontSize: 11, display: 'inline-flex',
+                  alignItems: 'center', justifyContent: 'center', fontWeight: 700, padding: '0 5px' }}>
                   {myInvites.length}
                 </span>
               </button>

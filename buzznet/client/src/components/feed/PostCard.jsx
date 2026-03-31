@@ -108,11 +108,11 @@ function ReplyRow({ reply, postId, commentId, postOwnerId, onDeleteSelf, level =
 
   const handleDeleteSubReply = (subReplyId) => {
     if (String(subReplyId).startsWith('temp-')) return;
-    setSubReplies(prev => prev.filter(r => r._id !== subReplyId)); // optimistic
+    setSubReplies(prev => prev.filter(r => r._id !== subReplyId));
     postAPI.deleteReply(postId, commentId, subReplyId)
       .catch(err => {
-        console.error(err);
-        toast.error(err?.response?.data?.message || 'Could not delete reply');
+        const status = err?.response?.status;
+        if (status !== 404) toast.error('Could not delete reply');
       });
   };
 
@@ -140,13 +140,14 @@ function ReplyRow({ reply, postId, commentId, postOwnerId, onDeleteSelf, level =
                 onClick={() => setShowInput(v => !v)}>Reply</button>
             )}
             {canDelete && !String(reply._id).startsWith('temp-') && (
-              <button style={S.deleteBtn} onClick={async () => {
-                onDeleteSelf(reply._id); // optimistic: remove immediately
-                try { await postAPI.deleteReply(postId, commentId, reply._id); }
-                catch (err) {
-                  console.error(err);
-                  toast.error(err?.response?.data?.message || 'Could not delete reply');
-                }
+              <button style={S.deleteBtn} onClick={() => {
+                onDeleteSelf(reply._id); // optimistic: remove from UI immediately
+                postAPI.deleteReply(postId, commentId, reply._id)
+                  .catch(err => {
+                    // Suppress 404 — UI already removed it, server may have already deleted it
+                    const status = err?.response?.status;
+                    if (status !== 404) toast.error('Could not delete reply');
+                  });
               }}>Delete</button>
             )}
           </div>
@@ -241,11 +242,11 @@ function CommentRow({ comment, postId, postOwnerId, onDeleteComment }) {
 
   const handleDeleteReply = (replyId) => {
     if (String(replyId).startsWith('temp-')) return;
-    setReplies(prev => prev.filter(r => r._id !== replyId)); // optimistic
+    setReplies(prev => prev.filter(r => r._id !== replyId));
     postAPI.deleteReply(postId, comment._id, replyId)
       .catch(err => {
-        console.error(err);
-        toast.error(err?.response?.data?.message || 'Could not delete reply');
+        const status = err?.response?.status;
+        if (status !== 404) toast.error('Could not delete reply');
       });
   };
 

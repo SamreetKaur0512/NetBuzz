@@ -96,9 +96,19 @@ export default function ProfilePage() {
       toast.success('Message request sent!');
       navigate('/chat');
     } catch (e) {
-      const msg = e.response?.data?.message || '';
-      if (msg.includes('already') || msg.includes('active')) navigate('/chat');
-      else toast.error(msg || 'Failed to send message request');
+      const data = e.response?.data || {};
+      const msg  = data.message || '';
+      if (data.already_connected) {
+        toast.info('You can already message this user! Redirecting…');
+        navigate('/chat');
+      } else if (data.reverse_pending) {
+        toast.info('This user already sent you a request — check your Requests tab!');
+        navigate('/chat');
+      } else if (msg.includes('already') || msg.includes('active')) {
+        navigate('/chat');
+      } else {
+        toast.error(msg || 'Failed to send message request');
+      }
     }
   };
 

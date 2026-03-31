@@ -196,8 +196,9 @@ export default function SnakeRoom({ room, roomCode, players: initPlayers, gameSo
       setTimeLeft(timeLimit);
       setAmAlive(true);
       setMyScore(0);
-      setPhase('countdown'); // show board but don't allow movement yet
-      drawGame(s, f);
+      setPhase('countdown'); // board visible, movement locked until Go!
+      // Draw board immediately so positions are visible during countdown
+      setTimeout(() => drawGame(s, f), 50);
     });
 
     gameSocket.on('snakeTick', ({ snakes: s, food: f, timeLeft: tl }) => {
