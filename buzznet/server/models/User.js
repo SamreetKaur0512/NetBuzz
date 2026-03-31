@@ -49,6 +49,13 @@ const userSchema = new mongoose.Schema(
     following:      [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     isPrivate:      { type: Boolean, default: false },
     blockedUsers:   [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    emailNotifications: {
+      followRequest:   { type: Boolean, default: false },
+      followAccepted:  { type: Boolean, default: false },
+      messageRequest:  { type: Boolean, default: false },
+      messageAccepted: { type: Boolean, default: false },
+      groupInvite:     { type: Boolean, default: false },
+    },
   },
   { timestamps: true }
 );

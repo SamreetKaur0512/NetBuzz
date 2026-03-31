@@ -25,31 +25,6 @@ const sendChatRequest = async (req, res, next) => {
       return res.status(403).json({ success: false, message: "Cannot send request to this user." });
     }
 
-    // Check if the OTHER person already sent a request that was accepted
-    // (meaning they can already message each other — no new request needed)
-    const reverseAccepted = await ChatRequest.findOne({
-      senderId: receiverId, receiverId: senderId, status: "accepted"
-    });
-    if (reverseAccepted) {
-      return res.status(409).json({
-        success: false,
-        already_connected: true,
-        message: "You can already message this user directly — they accepted your message request, no need to send a new one!",
-      });
-    }
-
-    // Check reverse pending — don't allow sending if other person already sent a pending request
-    const reversePending = await ChatRequest.findOne({
-      senderId: receiverId, receiverId: senderId, status: "pending"
-    });
-    if (reversePending) {
-      return res.status(409).json({
-        success: false,
-        reverse_pending: true,
-        message: "This user has already sent you a message request — check your Requests tab to accept it!",
-      });
-    }
-
     // Upsert: if rejected before, allow re-sending
     const existing = await ChatRequest.findOne({ senderId, receiverId });
     if (existing) {
@@ -57,7 +32,7 @@ const sendChatRequest = async (req, res, next) => {
         return res.status(409).json({ success: false, message: "Chat request already pending." });
       }
       if (existing.status === "accepted") {
-        return res.status(409).json({ success: false, message: "You can already message this user directly!" });
+        return res.status(409).json({ success: false, message: "Chat already active with this user." });
       }
       // Re-send after rejection
       existing.status = "pending";
@@ -73,6 +48,14 @@ const sendChatRequest = async (req, res, next) => {
       requestId: request._id,
       from: { _id: req.user._id, username: req.user.username, profilePicture: req.user.profilePicture },
     });
+
+    // Email notification if receiver has it enabled
+    try {
+      if (receiver.emailNotifications?.messageRequest) {
+        const { sendNotificationEmail } = require("../utils/email");
+        await sendNotificationEmail(receiver.email, receiver.username, "messageRequest", req.user.username);
+      }
+    } catch (e) { console.error("[email notify]", e.message); }
 
     res.status(201).json({ success: true, message: "Chat request sent.", request });
   } catch (err) {
@@ -105,6 +88,15 @@ const acceptChatRequest = async (req, res, next) => {
       requestId: request._id,
       by: { _id: req.user._id, username: req.user.username, profilePicture: req.user.profilePicture },
     });
+
+    // Email notification if sender has it enabled
+    try {
+      const sender = await User.findById(request.senderId).select("email username emailNotifications");
+      if (sender?.emailNotifications?.messageAccepted) {
+        const { sendNotificationEmail } = require("../utils/email");
+        await sendNotificationEmail(sender.email, sender.username, "messageAccepted", req.user.username);
+      }
+    } catch (e) { console.error("[email notify]", e.message); }
 
     res.status(200).json({ success: true, message: "Chat request accepted.", request });
   } catch (err) {

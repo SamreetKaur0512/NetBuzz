@@ -76,6 +76,15 @@ const updateUser = async (req, res, next) => {
     allowed.forEach(f => { if (req.body[f] !== undefined) updates[f] = req.body[f]; });
     if (req.file) updates.profilePicture = `/${req.file.path.replace(/\\/g, "/")}`;
 
+    // Handle emailNotifications as nested object from FormData
+    const notifKeys = ["followRequest","followAccepted","messageRequest","messageAccepted","groupInvite"];
+    const notifUpdates = {};
+    notifKeys.forEach(k => {
+      const val = req.body[`emailNotifications[${k}]`];
+      if (val !== undefined) notifUpdates[`emailNotifications.${k}`] = val === 'true' || val === true;
+    });
+    Object.assign(updates, notifUpdates);
+
     if (updates.username) {
       // Enforce uniqueness for display name (case-insensitive), excluding self
       const exists = await User.findOne({
@@ -134,6 +143,16 @@ const followUser = async (req, res, next) => {
         return res.json({ success: true, requested: true, message: "Follow request sent." });
       }
       await FollowRequest.create({ senderId: currentUserId, receiverId: targetId });
+
+      // Email notification if receiver has it enabled
+      try {
+        if (targetUser.emailNotifications?.followRequest) {
+          const { sendNotificationEmail } = require("../utils/email");
+          const me = await User.findById(currentUserId).select("username");
+          await sendNotificationEmail(targetUser.email, targetUser.username, "followRequest", me.username);
+        }
+      } catch (e) { console.error("[email notify]", e.message); }
+
       return res.json({ success: true, requested: true, message: "Follow request sent." });
     }
 
@@ -169,6 +188,22 @@ const acceptFollowRequest = async (req, res, next) => {
     await request.save();
     await User.findByIdAndUpdate(req.user._id,     { $addToSet: { followers: request.senderId } });
     await User.findByIdAndUpdate(request.senderId, { $addToSet: { following: req.user._id } });
+
+    // Notify the requester via socket
+    const io = req.app.get("io");
+    io.of("/chat").to(`user:${request.senderId}`).emit("followRequestAccepted", {
+      by: { _id: req.user._id, username: req.user.username, profilePicture: req.user.profilePicture },
+    });
+
+    // Email notification if sender has it enabled
+    try {
+      const sender = await User.findById(request.senderId).select("email username emailNotifications");
+      if (sender?.emailNotifications?.followAccepted) {
+        const { sendNotificationEmail } = require("../utils/email");
+        await sendNotificationEmail(sender.email, sender.username, "followAccepted", req.user.username);
+      }
+    } catch (e) { console.error("[email notify]", e.message); }
+
     res.json({ success: true, message: "Follow request accepted." });
   } catch (err) { next(err); }
 };

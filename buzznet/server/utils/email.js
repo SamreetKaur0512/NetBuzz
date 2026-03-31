@@ -1,20 +1,24 @@
 const https = require("https");
 
 const sendEmail = async ({ to, subject, html }) => {
-  const apiKey = process.env.RESEND_API_KEY;
-  const fromAddress = process.env.EMAIL_FROM || "BuzzNet <onboarding@resend.dev>";
+  const apiKey = process.env.BREVO_API_KEY;
 
-  const body = JSON.stringify({ from: fromAddress, to, subject, html });
+  const body = JSON.stringify({
+    sender:   { name: "BuzzNet", email: process.env.EMAIL_USER || "netbuzz705@gmail.com" },
+    to:       [{ email: to }],
+    subject,
+    htmlContent: html,
+  });
 
   return new Promise((resolve, reject) => {
     const req = https.request(
       {
-        hostname: "api.resend.com",
-        path: "/emails",
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
+        hostname: "api.brevo.com",
+        path:     "/v3/smtp/email",
+        method:   "POST",
+        headers:  {
+          "api-key":       apiKey,
+          "Content-Type":  "application/json",
           "Content-Length": Buffer.byteLength(body),
         },
       },
@@ -22,11 +26,10 @@ const sendEmail = async ({ to, subject, html }) => {
         let data = "";
         res.on("data", (chunk) => (data += chunk));
         res.on("end", () => {
-          const parsed = JSON.parse(data);
           if (res.statusCode >= 200 && res.statusCode < 300) {
-            resolve(parsed);
+            resolve(JSON.parse(data));
           } else {
-            reject(new Error(`Resend error ${res.statusCode}: ${JSON.stringify(parsed)}`));
+            reject(new Error(`Brevo error ${res.statusCode}: ${data}`));
           }
         });
       }
@@ -90,5 +93,46 @@ const sendPasswordResetEmail = async (email, otp, username) => {
 };
 
 module.exports = { sendOtpEmail, sendPasswordResetEmail };
+
+// ── Notification emails ────────────────────────────────────────────────────────
+const sendNotificationEmail = async (email, username, type, fromUsername) => {
+  const subjects = {
+    followRequest:   `${fromUsername} sent you a follow request on BuzzNet`,
+    followAccepted:  `${fromUsername} accepted your follow request on BuzzNet`,
+    messageRequest:  `${fromUsername} sent you a message request on BuzzNet`,
+    messageAccepted: `${fromUsername} accepted your message request on BuzzNet`,
+    groupInvite:     `${fromUsername} invited you to a group on BuzzNet`,
+  };
+  const bodies = {
+    followRequest:   `<p>${fromUsername} wants to follow you. Open BuzzNet to accept or decline.</p>`,
+    followAccepted:  `<p>Great news! ${fromUsername} accepted your follow request. You can now see their posts.</p>`,
+    messageRequest:  `<p>${fromUsername} wants to message you. Open BuzzNet to accept or decline.</p>`,
+    messageAccepted: `<p>Great news! ${fromUsername} accepted your message request. You can now chat!</p>`,
+    groupInvite:     `<p>${fromUsername} invited you to join a group. Open BuzzNet to accept or decline.</p>`,
+  };
+
+  const html = `
+    <div style="font-family:'Segoe UI',sans-serif;max-width:480px;margin:0 auto;background:#f4f6fb;padding:32px 24px;border-radius:16px;">
+      <div style="text-align:center;margin-bottom:24px;">
+        <span style="font-size:40px;font-style:italic;font-weight:700;color:#F7A325;">BuzzNet.</span>
+      </div>
+      <div style="background:#fff;border-radius:14px;padding:32px;">
+        <h2 style="margin:0 0 8px;font-size:20px;color:#1a1d2e;">Hi ${username || 'there'} 👋</h2>
+        ${bodies[type] || '<p>You have a new notification on BuzzNet.</p>'}
+        <div style="text-align:center;margin-top:24px;">
+          <a href="https://net-buzz.vercel.app" style="background:#F7A325;color:#1a1d2e;padding:12px 28px;border-radius:24px;font-weight:700;text-decoration:none;font-size:15px;">Open BuzzNet</a>
+        </div>
+        <p style="color:#9aa0b8;font-size:12px;margin-top:20px;text-align:center;">
+          You're receiving this because you enabled email notifications.<br/>
+          You can turn this off anytime in your BuzzNet profile settings.
+        </p>
+      </div>
+    </div>`;
+
+  await sendEmail({ to: email, subject: subjects[type] || 'New notification on BuzzNet', html });
+};
+
+module.exports = { sendOtpEmail, sendPasswordResetEmail, sendNotificationEmail };
+
 
 

@@ -41,6 +41,9 @@ export default function ChatPage() {
   const [myInvites,    setMyInvites]    = useState([]);
   const [showInvites,  setShowInvites]  = useState(false);
 
+  // Accepted notification modal (persists until user clicks OK)
+  const [acceptedNotif, setAcceptedNotif] = useState(null); // { type, username, picture }
+
   // Incoming message requests
   const [msgRequests,    setMsgRequests]    = useState([]);
   const [showMsgReqs,    setShowMsgReqs]    = useState(false);
@@ -164,6 +167,12 @@ export default function ChatPage() {
               : (g.unreadCount || 0),                    // own msg → no change
       } : g));
     });
+    chatSocket.on('chatRequestAccepted', ({ by }) => {
+      setAcceptedNotif({ type: 'message', username: by.username, picture: by.profilePicture });
+      // Refresh conversations
+      chatAPI.getConvos().then(r => setConvos(r.data.conversations || [])).catch(() => {});
+    });
+
     chatSocket.on('chatRequest', (req) => {
       setMsgRequests(prev => prev.some(r => r._id === req.requestId) ? prev : [
         { _id: req.requestId, senderId: req.from, status: 'pending' }, ...prev
@@ -260,7 +269,7 @@ export default function ChatPage() {
 
     return () => {
       chatSocket.off('receiveMessage');    chatSocket.off('receiveGroupMessage');
-      chatSocket.off('chatRequest');       chatSocket.off('groupInvite');
+      chatSocket.off('chatRequestAccepted'); chatSocket.off('chatRequest'); chatSocket.off('groupInvite');
       chatSocket.off('typing');            chatSocket.off('stopTyping');
       chatSocket.off('messagesRead');      chatSocket.off('messageDeleted');
       chatSocket.off('groupMessagesSeen');
@@ -519,26 +528,26 @@ export default function ChatPage() {
         <div className="chat-sidebar-header">
           <div className="chat-sidebar-title">Messages</div>
           <div style={{ display: 'flex', gap: 6 }}>
-            <button className="btn btn-secondary btn-sm"
-              style={{ fontSize: 12, padding: '4px 10px', display: 'flex', alignItems: 'center', gap: 6 }}
+            <button className="btn btn-secondary btn-sm" style={{ position: 'relative', fontSize: 12, padding: '4px 10px', lineHeight: 1.3, overflow: 'visible' }}
               onClick={() => setShowMsgReqs(true)}>
-              Requests
+              <div>Requests</div>
+              <div style={{ fontSize: 9, color: 'var(--text-muted)', fontWeight: 400, marginTop: 1 }}></div>
               {msgRequests.length > 0 && (
-                <span style={{ background: '#e74c3c', color: '#fff', borderRadius: 10,
-                  minWidth: 20, height: 20, fontSize: 11, display: 'inline-flex',
-                  alignItems: 'center', justifyContent: 'center', fontWeight: 700, padding: '0 5px' }}>
+                <span style={{ position: 'absolute', top: -8, right: -8, background: '#e74c3c',
+                  color: '#fff', borderRadius: '50%', minWidth: 18, height: 18, fontSize: 11,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontWeight: 700, padding: '0 3px', zIndex: 10, lineHeight: 1 }}>
                   {msgRequests.length}
                 </span>
               )}
             </button>
             {myInvites.length > 0 && (
-              <button className="btn btn-secondary btn-sm"
-                style={{ fontSize: 12, padding: '4px 10px', display: 'flex', alignItems: 'center', gap: 6 }}
+              <button className="btn btn-secondary btn-sm" style={{ position: 'relative', fontSize: 12, padding: '4px 10px' }}
                 onClick={() => setShowInvites(true)}>
                 Invites
-                <span style={{ background: 'var(--yellow)', color: '#1a1d2e', borderRadius: 10,
-                  minWidth: 20, height: 20, fontSize: 11, display: 'inline-flex',
-                  alignItems: 'center', justifyContent: 'center', fontWeight: 700, padding: '0 5px' }}>
+                <span style={{ position: 'absolute', top: -4, right: -4, background: 'var(--yellow)',
+                  color: '#fff', borderRadius: '50%', width: 16, height: 16, fontSize: 10,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   {myInvites.length}
                 </span>
               </button>
@@ -907,6 +916,28 @@ export default function ChatPage() {
       )}
 
       {/* ── Invite Member Modal ── */}
+      {/* Accepted notification modal — stays until user clicks OK */}
+      {acceptedNotif && (
+        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.55)', zIndex:9999,
+          display:'flex', alignItems:'center', justifyContent:'center' }}>
+          <div style={{ background:'var(--bg-card)', borderRadius:20, padding:'32px 28px',
+            maxWidth:340, width:'90%', textAlign:'center', boxShadow:'0 8px 40px rgba(0,0,0,0.3)' }}>
+            <div style={{ fontSize:48, marginBottom:12 }}>🎉</div>
+            <div style={{ fontSize:18, fontWeight:700, color:'var(--text-primary)', marginBottom:8 }}>
+              Request Accepted!
+            </div>
+            <div style={{ fontSize:15, color:'var(--text-secondary)', marginBottom:24, lineHeight:1.6 }}>
+              <strong>{acceptedNotif.username}</strong> accepted your message request.<br/>
+              You can now chat with them!
+            </div>
+            <button className="btn btn-primary" style={{ padding:'10px 36px', fontSize:15, fontWeight:700 }}
+              onClick={() => setAcceptedNotif(null)}>
+              OK
+            </button>
+          </div>
+        </div>
+      )}
+
       {showInvite && (
         <div style={{ position:'fixed', inset:0, background:'rgba(20,24,60,0.55)',
           display:'flex', alignItems:'center', justifyContent:'center', zIndex:999 }}>
