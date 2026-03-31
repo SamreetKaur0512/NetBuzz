@@ -3,10 +3,10 @@ const router  = express.Router();
 const { verifyToken, optionalAuth } = require("../middleware/auth");
 const { upload, handleMulterError }  = require("../middleware/upload");
 const {
-  getUserById, updateUser,
+  getUserById, updateUser, updateNotifications,
   followUser, unfollowUser,
   cancelFollowRequest, getFollowRequests, acceptFollowRequest, rejectFollowRequest,
-  blockUser, getBlockedUsers, searchUsers, deleteAccount, updateNotifications,
+  blockUser, getBlockedUsers, searchUsers, deleteAccount,
 } = require("../controllers/userController");
 
 router.get("/me", verifyToken, async (req, res) => {
@@ -28,12 +28,14 @@ router.put("/follow-requests/:requestId/accept",   verifyToken,  acceptFollowReq
 router.put("/follow-requests/:requestId/reject",   verifyToken,  rejectFollowRequest);
 router.delete("/delete-account",                   verifyToken,  deleteAccount);
 
-router.get("/:id",            optionalAuth, getUserById);
+// ✅ Specific routes BEFORE generic /:id route
 router.put("/update/:id/notifications", verifyToken, updateNotifications);
 router.put("/update/:id",     verifyToken,  upload.single("profilePicture"), handleMulterError, updateUser);
 router.put("/follow/:id",     verifyToken,  followUser);
 router.put("/unfollow/:id",   verifyToken,  unfollowUser);
 router.delete("/follow/:id/cancel", verifyToken, cancelFollowRequest);
 router.put("/block/:id",      verifyToken,  blockUser);
+
+router.get("/:id",            optionalAuth, getUserById);
 
 module.exports = router;
