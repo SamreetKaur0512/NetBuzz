@@ -152,13 +152,15 @@ export default function ProfilePage() {
   };
 
   const handleSaveNotifSettings = async () => {
-    try {
-      const res = await userAPI.updateNotifications(id, notifSettings);
-      updateUser(res.data.user);
-      setNotifOpen(false);
-      toast.success('Notification settings saved!');
-    } catch (e) { toast.error('Failed to save settings'); }
-  };
+  try {
+    const res = await userAPI.updateNotifications(id, notifSettings);
+    updateUser(res.data.user);
+    // ✅ Sync profile state so the useEffect doesn't reset toggles on re-render
+    setProfile(p => ({ ...p, emailNotifications: res.data.user.emailNotifications }));
+    setNotifOpen(false);
+    toast.success('Notification settings saved!');
+  } catch (e) { toast.error('Failed to save settings'); }
+};
 
   const handleEditFile = (e) => {
     const f = e.target.files[0];
