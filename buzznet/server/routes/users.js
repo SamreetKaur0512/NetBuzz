@@ -22,41 +22,12 @@ router.get("/me", verifyToken, async (req, res) => {
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
-router.get("/search",          verifyToken,  searchUsers);
-router.get("/blocked",         verifyToken,  getBlockedUsers);
-router.get("/follow-requests", verifyToken,  getFollowRequests);
-
-// TEMP DEBUG ROUTE - remove after testing
-router.get("/test-email", verifyToken, async (req, res) => {
-  try {
-    console.log("=== EMAIL TEST START ===");
-    console.log("EMAIL_USER:", process.env.EMAIL_USER);
-    console.log("EMAIL_PASS exists:", !!process.env.EMAIL_PASS);
-    console.log("BREVO_API_KEY exists:", !!process.env.BREVO_API_KEY);
-
-    const User = require("../models/User");
-    const user = await User.findById(req.user._id);
-    console.log("emailNotifications:", JSON.stringify(user.emailNotifications));
-
-    const { sendNotificationEmail } = require("../utils/email");
-    console.log("sendNotificationEmail type:", typeof sendNotificationEmail);
-
-    await sendNotificationEmail(req.user.email, req.user.username, "followAccepted", "TestUser");
-    console.log("=== EMAIL SENT SUCCESSFULLY ===");
-
-    res.json({
-      success: true,
-      message: "Test email sent to " + req.user.email,
-      emailNotifications: user.emailNotifications,
-      emailUser: process.env.EMAIL_USER,
-      brevoKeyExists: !!process.env.BREVO_API_KEY,
-      gmailPassExists: !!process.env.EMAIL_PASS,
-    });
-  } catch (err) {
-    console.error("=== EMAIL TEST FAILED ===", err.message);
-    res.json({ success: false, error: err.message });
-  }
-});
+router.get("/search",                              verifyToken,  searchUsers);
+router.get("/blocked",                             verifyToken,  getBlockedUsers);
+router.get("/follow-requests",                     verifyToken,  getFollowRequests);
+router.put("/follow-requests/:requestId/accept",   verifyToken,  acceptFollowRequest);
+router.put("/follow-requests/:requestId/reject",   verifyToken,  rejectFollowRequest);
+router.delete("/delete-account",                   verifyToken,  deleteAccount);
 
 // ── PUT routes ────────────────────────────────────────────────────────────────
 router.put("/follow-requests/:requestId/accept", verifyToken, acceptFollowRequest);
