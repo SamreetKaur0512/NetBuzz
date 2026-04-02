@@ -1,42 +1,22 @@
-const https = require("https");
+const nodemailer = require("nodemailer");
+
+// ── Brevo SMTP transporter (works on Render free plan) ────────────────────────
+const transporter = nodemailer.createTransport({
+  host: "smtp-relay.brevo.com",
+  port: 587,
+  secure: false,
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.BREVO_SMTP_KEY,
+  },
+});
 
 const sendEmail = async ({ to, subject, html }) => {
-  const apiKey = process.env.BREVO_API_KEY;
-
-  const body = JSON.stringify({
-    sender:      { name: "BuzzNet", email: process.env.EMAIL_USER || "netbuzz705@gmail.com" },
-    to:          [{ email: to }],
+  await transporter.sendMail({
+    from: `"BuzzNet" <${process.env.EMAIL_USER}>`,
+    to,
     subject,
-    htmlContent: html,
-  });
-
-  return new Promise((resolve, reject) => {
-    const req = https.request(
-      {
-        hostname: "api.brevo.com",
-        path:     "/v3/smtp/email",
-        method:   "POST",
-        headers:  {
-          "api-key":        apiKey,
-          "Content-Type":   "application/json",
-          "Content-Length": Buffer.byteLength(body),
-        },
-      },
-      (res) => {
-        let data = "";
-        res.on("data", (chunk) => (data += chunk));
-        res.on("end", () => {
-          if (res.statusCode >= 200 && res.statusCode < 300) {
-            resolve(JSON.parse(data));
-          } else {
-            reject(new Error(`Brevo error ${res.statusCode}: ${data}`));
-          }
-        });
-      }
-    );
-    req.on("error", reject);
-    req.write(body);
-    req.end();
+    html,
   });
 };
 
@@ -134,5 +114,5 @@ const sendNotificationEmail = async (email, username, type, fromUsername) => {
   await sendEmail({ to: email, subject: subjects[type] || 'New notification on BuzzNet', html });
 };
 
-// ── Single export at bottom ────────────────────────────────────────────────────
+// ── Single export ──────────────────────────────────────────────────────────────
 module.exports = { sendOtpEmail, sendPasswordResetEmail, sendNotificationEmail };

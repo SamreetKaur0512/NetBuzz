@@ -2,7 +2,6 @@ const ChatRequest = require("../models/ChatRequest");
 const User        = require("../models/User");
 
 // ─── POST /api/chat/request ───────────────────────────────────────────────────
-// Send a chat request to another user
 const sendChatRequest = async (req, res, next) => {
   try {
     const senderId   = req.user._id;
@@ -25,7 +24,18 @@ const sendChatRequest = async (req, res, next) => {
       return res.status(403).json({ success: false, message: "Cannot send request to this user." });
     }
 
-    // Upsert: if rejected before, allow re-sending
+    // ✅ Check reverse direction — other person already sent a request to current user
+    const reverseRequest = await ChatRequest.findOne({ senderId: receiverId, receiverId: senderId });
+    if (reverseRequest) {
+      if (reverseRequest.status === "pending") {
+        return res.status(409).json({ success: false, message: `${receiver.username} has already sent you a message request. Check your requests.` });
+      }
+      if (reverseRequest.status === "accepted") {
+        return res.status(409).json({ success: false, message: "Chat already active with this user." });
+      }
+    }
+
+    // Check same direction — current user already sent a request
     const existing = await ChatRequest.findOne({ senderId, receiverId });
     if (existing) {
       if (existing.status === "pending") {
@@ -130,7 +140,6 @@ const rejectChatRequest = async (req, res, next) => {
 };
 
 // ─── GET /api/chat/requests ───────────────────────────────────────────────────
-// Fetch all incoming pending requests for the logged-in user
 const getPendingRequests = async (req, res, next) => {
   try {
     const requests = await ChatRequest.find({
