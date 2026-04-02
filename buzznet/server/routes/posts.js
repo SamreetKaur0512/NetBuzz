@@ -1,7 +1,6 @@
 const express = require("express");
 const router  = express.Router();
 const { verifyToken } = require("../middleware/auth");
-const { upload, handleMulterError } = require("../middleware/upload");
 const { uploadToCloud, handleMulterError } = require("../middleware/upload");
 const {
   createPost, deletePost, likePost,
