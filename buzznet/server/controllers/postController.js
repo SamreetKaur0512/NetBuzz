@@ -58,7 +58,7 @@ const createPost = async (req, res, next) => {
     }
 
     const mediaType = req.file.mimetype.startsWith("video/") ? "video" : "image";
-    const mediaUrl = `/${req.file.path.replace(/\\/g, "/")}`;
+    const mediaUrl = req.file.cloudinaryUrl;
 
     const post = await Post.create({
       userId: req.user._id,
@@ -82,9 +82,22 @@ const deletePost = async (req, res, next) => {
     if (!post) {
       return res.status(404).json({ success: false, message: "Post not found." });
     }
-
     if (post.userId.toString() !== req.user._id.toString()) {
       return res.status(403).json({ success: false, message: "You can only delete your own posts." });
+    }
+
+    // ✅ Delete from Cloudinary if URL is a Cloudinary URL
+    if (post.mediaUrl && post.mediaUrl.includes("cloudinary.com")) {
+      try {
+        const cloudinary = require("cloudinary").v2;
+        // Extract public_id from URL
+        const parts    = post.mediaUrl.split("/");
+        const file     = parts[parts.length - 1];
+        const folder   = parts[parts.length - 2];
+        const publicId = `${folder}/${file.split(".")[0]}`;
+        const isVideo  = post.mediaType === "video";
+        await cloudinary.uploader.destroy(publicId, { resource_type: isVideo ? "video" : "image" });
+      } catch (e) { console.error("[cloudinary delete]", e.message); }
     }
 
     await post.deleteOne();

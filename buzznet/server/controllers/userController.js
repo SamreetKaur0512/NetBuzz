@@ -74,7 +74,7 @@ const updateUser = async (req, res, next) => {
     const allowed = ["username", "bio", "isPrivate"];
     const updates = {};
     allowed.forEach(f => { if (req.body[f] !== undefined) updates[f] = req.body[f]; });
-    if (req.file) updates.profilePicture = `/${req.file.path.replace(/\\/g, "/")}`;
+   if (req.file) updates.profilePicture = req.file.cloudinaryUrl || `/${req.file.path.replace(/\\\\/g, "/")}`;
 
     if (updates.username) {
       // Enforce uniqueness for display name (case-insensitive), excluding self
@@ -322,12 +322,40 @@ const deleteAccount = async (req, res, next) => {
     await User.updateMany({}, { $pull: { followers: userId, following: userId, blockedUsers: userId } });
 
     const userDoc = await User.findById(userId).select("profilePicture email");
-    if (userDoc?.profilePicture && !userDoc.profilePicture.startsWith("http")) {
-      const avatarPath = path.join(__dirname, "..", userDoc.profilePicture.replace(/^\//, ""));
-      if (fs.existsSync(avatarPath)) fs.unlinkSync(avatarPath);
-    }
 
-    await User.findByIdAndDelete(userId);
+// ✅ Delete profile picture from Cloudinary
+if (userDoc?.profilePicture && userDoc.profilePicture.includes("cloudinary.com")) {
+  try {
+    const cloudinary = require("cloudinary").v2;
+    const parts    = userDoc.profilePicture.split("/");
+    const file     = parts[parts.length - 1];
+    const folder   = parts[parts.length - 2];
+    const publicId = `${folder}/${file.split(".")[0]}`;
+    await cloudinary.uploader.destroy(publicId, { resource_type: "image" });
+  } catch (e) { console.error("[cloudinary delete avatar]", e.message); }
+} else if (userDoc?.profilePicture && !userDoc.profilePicture.startsWith("http")) {
+  const avatarPath = path.join(__dirname, "..", userDoc.profilePicture.replace(/^\//, ""));
+  if (fs.existsSync(avatarPath)) fs.unlinkSync(avatarPath);
+}
+
+// ✅ Delete all user's posts from Cloudinary
+try {
+  const cloudinary = require("cloudinary").v2;
+  const userPosts  = await Post.find({ userId });
+  for (const post of userPosts) {
+    if (post.mediaUrl && post.mediaUrl.includes("cloudinary.com")) {
+      const parts    = post.mediaUrl.split("/");
+      const file     = parts[parts.length - 1];
+      const folder   = parts[parts.length - 2];
+      const publicId = `${folder}/${file.split(".")[0]}`;
+      const isVideo  = post.mediaType === "video";
+      await cloudinary.uploader.destroy(publicId, { resource_type: isVideo ? "video" : "image" });
+    }
+  }
+} catch (e) { console.error("[cloudinary delete posts]", e.message); }
+
+await Post.deleteMany({ userId });
+await User.findByIdAndDelete(userId);
     res.json({ success: true, message: "Account permanently deleted." });
   } catch (err) { next(err); }
 };

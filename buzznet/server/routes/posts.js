@@ -2,6 +2,7 @@ const express = require("express");
 const router  = express.Router();
 const { verifyToken } = require("../middleware/auth");
 const { upload, handleMulterError } = require("../middleware/upload");
+const { uploadToCloud, handleMulterError } = require("../middleware/upload");
 const {
   createPost, deletePost, likePost,
   commentOnPost, replyToComment, likeComment, deleteComment, deleteReply, deleteNestedReply,
@@ -11,7 +12,7 @@ const {
 router.get("/feed",                              verifyToken, getFeed);
 router.get("/explore",                           verifyToken, getExplore);
 router.get("/user/:id",                          verifyToken, getUserPosts);
-router.post("/create",                           verifyToken, upload.single("media"), handleMulterError, createPost);
+router.post("/create",                           verifyToken, ...uploadToCloud("media", "buzznet/posts"), handleMulterError, createPost);
 router.delete("/:id",                            verifyToken, deletePost);
 router.put("/like/:id",                          verifyToken, likePost);
 router.post("/comment/:id",                      verifyToken, commentOnPost);

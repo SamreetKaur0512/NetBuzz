@@ -1,72 +1,63 @@
-const multer = require("multer");
-const path = require("path");
-const fs = require("fs");
+const multer     = require("multer");
+const cloudinary = require("cloudinary").v2;
+const { Readable } = require("stream");
 
-// Ensure upload directories exist
-const ensureDir = (dir) => {
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-};
-
-// ─── Storage Engine ───────────────────────────────────────────────────────────
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    let folder = "uploads/misc";
-    if (file.mimetype.startsWith("image/")) folder = "uploads/images";
-    if (file.mimetype.startsWith("video/")) folder = "uploads/videos";
-    if (req.route && req.route.path.includes("update")) folder = "uploads/avatars";
-
-    ensureDir(folder);
-    cb(null, folder);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-    const ext = path.extname(file.originalname).toLowerCase();
-    cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
-  },
+cloudinary.config({
+  cloud_name:  process.env.CLOUDINARY_CLOUD_NAME,
+  api_key:     process.env.CLOUDINARY_API_KEY,
+  api_secret:  process.env.CLOUDINARY_API_SECRET,
 });
 
-// ─── File Filter ──────────────────────────────────────────────────────────────
-const fileFilter = (req, file, cb) => {
-  const allowedMimeTypes = [
-    "image/jpeg",
-    "image/jpg",
-    "image/png",
-    "image/gif",
-    "image/webp",
-    "video/mp4",
-    "video/mpeg",
-    "video/quicktime",
-    "video/webm",
-  ];
-
-  if (allowedMimeTypes.includes(file.mimetype)) {
-    cb(null, true);
-  } else {
-    cb(new Error(`File type not allowed. Supported: JPEG, PNG, GIF, WEBP, MP4, MOV, WEBM`), false);
-  }
-};
-
-// ─── Upload Instances ─────────────────────────────────────────────────────────
+// ── Use memory storage — file goes to Cloudinary, not disk ───────────────────
 const upload = multer({
-  storage,
-  fileFilter,
-  limits: {
-    fileSize: 50 * 1024 * 1024, // 50MB max
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 50 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const allowed = [
+      "image/jpeg","image/jpg","image/png","image/gif","image/webp",
+      "video/mp4","video/mpeg","video/quicktime","video/webm",
+    ];
+    if (allowed.includes(file.mimetype)) cb(null, true);
+    else cb(new Error("File type not allowed. Supported: JPEG, PNG, GIF, WEBP, MP4, MOV, WEBM"), false);
   },
 });
 
-// Multer error handler middleware
-const handleMulterError = (err, req, res, next) => {
-  if (err instanceof multer.MulterError) {
-    if (err.code === "LIMIT_FILE_SIZE") {
-      return res.status(400).json({ success: false, message: "File too large. Maximum size is 50MB." });
+// ── Upload buffer to Cloudinary ───────────────────────────────────────────────
+const uploadToCloudinary = (buffer, options) => {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(options, (error, result) => {
+      if (error) reject(error);
+      else resolve(result);
+    });
+    Readable.from(buffer).pipe(stream);
+  });
+};
+
+// ── Middleware: upload file to Cloudinary after multer parses it ──────────────
+const uploadToCloud = (fieldName, folder = "buzznet") => [
+  upload.single(fieldName),
+  async (req, res, next) => {
+    if (!req.file) return next();
+    try {
+      const isVideo   = req.file.mimetype.startsWith("video/");
+      const result    = await uploadToCloudinary(req.file.buffer, {
+        folder,
+        resource_type: isVideo ? "video" : "image",
+      });
+      req.file.cloudinaryUrl  = result.secure_url;
+      req.file.cloudinaryId   = result.public_id;
+      next();
+    } catch (err) {
+      next(err);
     }
-    return res.status(400).json({ success: false, message: err.message });
-  }
-  if (err) {
+  },
+];
+
+const handleMulterError = (err, req, res, next) => {
+  if (err && err.message) {
     return res.status(400).json({ success: false, message: err.message });
   }
   next();
 };
 
-module.exports = { upload, handleMulterError };
+module.exports = { upload, uploadToCloud, handleMulterError };

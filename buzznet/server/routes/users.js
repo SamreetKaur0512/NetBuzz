@@ -2,6 +2,7 @@ const express = require("express");
 const router  = express.Router();
 const { verifyToken, optionalAuth } = require("../middleware/auth");
 const { upload, handleMulterError }  = require("../middleware/upload");
+const { uploadToCloud, handleMulterError } = require("../middleware/upload");
 const {
   getUserById, updateUser, updateNotifications,
   followUser, unfollowUser,
@@ -33,7 +34,7 @@ router.delete("/delete-account",                   verifyToken,  deleteAccount);
 router.put("/follow-requests/:requestId/accept", verifyToken, acceptFollowRequest);
 router.put("/follow-requests/:requestId/reject", verifyToken, rejectFollowRequest);
 router.put("/update/:id/notifications", verifyToken, updateNotifications);
-router.put("/update/:id",    verifyToken, upload.single("profilePicture"), handleMulterError, updateUser);
+router.put("/update/:id",    verifyToken, ...uploadToCloud("profilePicture", "buzznet/avatars"), handleMulterError, updateUser);
 router.put("/follow/:id",    verifyToken, followUser);
 router.put("/unfollow/:id",  verifyToken, unfollowUser);
 router.put("/block/:id",     verifyToken, blockUser);
