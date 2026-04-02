@@ -541,17 +541,19 @@ export default function ChatPage() {
                 </span>
               )}
             </button>
-            {myInvites.length > 0 && (
-              <button className="btn btn-secondary btn-sm" style={{ position: 'relative', fontSize: 12, padding: '4px 10px' }}
-                onClick={() => setShowInvites(true)}>
-                Invites
-                <span style={{ position: 'absolute', top: -4, right: -4, background: 'var(--yellow)',
-                  color: '#fff', borderRadius: '50%', width: 16, height: 16, fontSize: 10,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  {myInvites.length}
-                </span>
-              </button>
-            )}
+            
+            <button className="btn btn-secondary btn-sm" style={{ position: 'relative', fontSize: 12, padding: '4px 10px', lineHeight: 1.3, overflow: 'visible' }}
+  onClick={() => setShowInvites(true)}>
+  <div>Invites</div>
+  {myInvites.length > 0 && (
+    <span style={{ position: 'absolute', top: -8, right: -8, background: '#e74c3c',
+      color: '#fff', borderRadius: '50%', minWidth: 18, height: 18, fontSize: 11,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontWeight: 700, padding: '0 3px', zIndex: 10, lineHeight: 1 }}>
+      {myInvites.length}
+    </span>
+  )}
+</button>
             <button className="btn btn-primary btn-sm" style={{ fontSize: 12, padding: '4px 10px' }}
               onClick={() => setShowNewGroup(true)}>
               + New Group
