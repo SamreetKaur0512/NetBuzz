@@ -122,17 +122,30 @@ export default function ProfilePage() {
   };
 
   const handleMessage = async () => {
-    try {
-      await chatAPI.sendRequest(id);
-      toast.success('Message request sent!');
-      navigate('/chat');
-    } catch (e) {
-      const msg = e.response?.data?.message || '';
-      if (msg.includes('already') || msg.includes('active')) navigate('/chat');
-      else toast.error(msg || 'Failed to send message request');
+  try {
+    await chatAPI.sendRequest(id);
+    toast.success('Message request sent!');
+    navigate('/chat');
+  } catch (e) {
+    const msg = e.response?.data?.message || '';
+    const status = e.response?.status;
+    if (status === 409) {
+      if (msg.includes('already sent you')) {
+        toast.info(`💬 ${msg}`);
+      } else if (msg.includes('already pending')) {
+        toast.info('💬 Message request already sent — waiting for reply.');
+        navigate('/chat');
+      } else if (msg.includes('active') || msg.includes('Chat already')) {
+        navigate('/chat');
+      } else {
+        toast.info(msg);
+        navigate('/chat');
+      }
+    } else {
+      toast.error(msg || 'Failed to send message request');
     }
-  };
-
+  }
+};
   const handleBlock = async () => {
     if (!window.confirm(isBlocked ? `Unblock ${profile.username}?` : `Block ${profile.username}?`)) return;
     try {

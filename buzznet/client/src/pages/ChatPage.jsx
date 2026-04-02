@@ -409,7 +409,14 @@ export default function ChatPage() {
         );
         if (newConvo) openConvo(newConvo);
       }
-    } catch (e) { toast.error('Failed to accept request'); }
+      } catch (e) { 
+  const msg = e.response?.data?.message || '';
+  if (e.response?.status === 400 && msg.includes('already')) {
+    toast.info('Already accepted');
+  } else {
+    toast.error(msg || 'Failed to accept request');
+  }
+}
   };
 
   const handleDeclineMsgReq = async (requestId) => {
@@ -417,7 +424,7 @@ export default function ChatPage() {
       await chatAPI.rejectRequest(requestId);
       setMsgRequests(prev => prev.filter(r => r._id !== requestId));
       toast.info('Request declined');
-    } catch (e) { toast.error('Failed'); }
+    } catch (e) { toast.error(e.response?.data?.message || 'Failed to decline'); }
   };
 
   // ── Send invite ───────────────────────────────────────────────────────────────
@@ -444,7 +451,14 @@ export default function ChatPage() {
       });
       toast.success(`Joined "${groupData?.name}"!`);
       setShowInvites(false);
-    } catch (e) { toast.error(e.response?.data?.message || 'Failed'); }
+    } catch (e) {
+  const msg = e.response?.data?.message || '';
+  if (e.response?.status === 400 && msg.includes('already')) {
+    toast.info('Already joined this group');
+  } else {
+    toast.error(msg || 'Failed to accept invite');
+  }
+}
   };
 
   const handleDeclineInvite = async (inviteId) => {
@@ -452,7 +466,7 @@ export default function ChatPage() {
       await groupAPI.declineInvite(inviteId);
       setMyInvites(prev => prev.filter(i => i._id !== inviteId));
       toast.info('Invite declined');
-    } catch (e) { toast.error('Failed'); }
+    } catch (e) { toast.error(e.response?.data?.message || 'Failed to decline invite'); }
   };
 
   // ── Leave group ───────────────────────────────────────────────────────────────
