@@ -22,6 +22,7 @@ export default function ChatPage() {
   const [isTyping, setIsTyping]  = useState(false);
   const [typing,   setTyping]    = useState(false);
   const [mobileView, setMobileView] = useState('list');
+  const [acceptedNotif, setAcceptedNotif] = useState(null);
 
   // Group info panel
   const [showGroupInfo, setShowGroupInfo] = useState(false);
@@ -41,8 +42,6 @@ export default function ChatPage() {
   const [myInvites,    setMyInvites]    = useState([]);
   const [showInvites,  setShowInvites]  = useState(false);
 
-  // Accepted notification modal (persists until user clicks OK)
-  const [acceptedNotif, setAcceptedNotif] = useState(null); // { type, username, picture }
 
   // Incoming message requests
   const [msgRequests,    setMsgRequests]    = useState([]);
@@ -715,8 +714,15 @@ export default function ChatPage() {
                       <div key={midStr+idx}
                         style={{ display:'flex', alignItems:'center', gap:6,
                         background:'var(--bg-surface)', borderRadius:20, padding:'4px 6px 4px 4px' }}>
-                        <div onClick={() => mid && navigate(`/profile/${mid}`)}
-                          style={{ display:'flex', alignItems:'center', gap:6, cursor:'pointer' }}>
+                        <div onClick={() => {
+  if (!mid) return;
+  // ✅ Do not navigate to profile of blocked/blocking user
+  const isBlockedMember = blockedUsers.some(b => b._id?.toString() === mid?.toString());
+  if (isBlockedMember) return;
+  navigate(`/profile/${mid}`);
+}}
+  style={{ display:'flex', alignItems:'center', gap:6,
+    cursor: blockedUsers.some(b => b._id?.toString() === mid?.toString()) ? 'default' : 'pointer' }}>
                           <Avatar src={mpic} username={mname} size={24} />
                           <span style={{ fontSize:13 }}>{mname}</span>
                           {isAdmin && <span style={{ fontSize:10, color:'var(--yellow)', fontWeight:700 }}>ADMIN</span>}
@@ -800,23 +806,31 @@ export default function ChatPage() {
                         {isOut && activeConvo.type !== 'group' && (
                           <span style={{ fontSize: 10 }}>{isRead ? '✓✓' : '✓'}</span>
                         )}
-                        {/* Group "Seen by" — shows avatars of who read it, only on own messages */}
-                        {isOut && activeConvo.type === 'group' && readByUsers.length > 0 && (
-                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}
-                            title={`Seen by: ${readByUsers.map(r => r.username || 'User').join(', ')}`}>
-                            {readByUsers.slice(0, 3).map((r, idx) => (
-                              <Avatar
-                                key={(r._id || r)?.toString() || idx}
-                                src={r.profilePicture}
-                                username={r.username || '?'}
-                                size={12}
-                              />
-                            ))}
-                            {readByUsers.length > 3 && (
-                              <span style={{ fontSize: 9, color: 'var(--text-muted)' }}>+{readByUsers.length - 3}</span>
-                            )}
-                          </span>
-                        )}
+                        {isOut && activeConvo.type === 'group' && readByUsers.length > 0 && (() => {
+  // ✅ Filter out blocked users from seen list
+  const visibleReaders = readByUsers.filter(r => {
+    const rid = (r._id || r)?.toString();
+    return !blockedUsers.some(b => b._id?.toString() === rid);
+  });
+  if (visibleReaders.length === 0) return null;
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}
+      title={`Seen by: ${visibleReaders.map(r => r.username || 'User').join(', ')}`}>
+      {visibleReaders.slice(0, 3).map((r, idx) => (
+        <Avatar
+          key={(r._id || r)?.toString() || idx}
+          src={r.profilePicture}
+          username={r.username || '?'}
+          size={12}
+        />
+      ))}
+      {visibleReaders.length > 3 && (
+        <span style={{ fontSize: 9, color: 'var(--text-muted)' }}>+{visibleReaders.length - 3}</span>
+      )}
+    </span>
+  );
+})()}
+        
 
                         {/* Delete buttons — appear on hover */}
                         <span
@@ -984,78 +998,98 @@ export default function ChatPage() {
       )}
 
       {/* ── Message Requests Modal ── */}
-      {showMsgReqs && (
-        <div style={{ position:'fixed', inset:0, background:'rgba(20,24,60,0.55)',
-          display:'flex', alignItems:'center', justifyContent:'center', zIndex:999 }}>
-          <div style={{ background:'var(--bg-surface)', borderRadius:16, padding:28,
-            width:'90%', maxWidth:440, display:'flex', flexDirection:'column', gap:14,
-            boxShadow:'0 8px 32px rgba(0,0,0,0.3)', maxHeight:'80vh', overflowY:'auto' }}>
-            <div style={{ fontWeight:700, fontSize:18 }}>Message Requests</div>
-            {msgRequests.length === 0 && (
-              <div style={{ textAlign:'center', color:'var(--text-muted)', padding:20 }}>No pending requests</div>
-            )}
-            {msgRequests.map(req => (
-              <div key={req._id} style={{ display:'flex', alignItems:'center', gap:12,
-                padding:'12px 14px', borderRadius:12, background:'var(--bg-elevated)',
-                border:'1px solid var(--border)' }}>
-                <Avatar src={req.senderId?.profilePicture} username={req.senderId?.username||'?'} size={40} />
-                <div style={{ flex:1, minWidth:0, overflow:'hidden' }}>
-                  <div style={{ fontWeight:600, fontSize:14, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{req.senderId?.username||'User'}</div>
-                  <div style={{ fontSize:12, color:'var(--text-muted)' }}>wants to message you</div>
-                </div>
-                <div style={{ display:'flex', gap:6, flexShrink:0 }}>
-                  <button className="btn btn-sm btn-primary"
-                    onClick={() => handleAcceptMsgReq(req._id)}>Accept</button>
-                  <button className="btn btn-sm btn-ghost"
-                    style={{ color:'var(--red)' }}
-                    onClick={() => handleDeclineMsgReq(req._id)}>Decline</button>
-                </div>
+      {/* ── Message Requests Modal ── */}
+{showMsgReqs && (
+  <div style={{ position:'fixed', inset:0, background:'rgba(20,24,60,0.55)',
+    display:'flex', alignItems:'center', justifyContent:'center', zIndex:999, padding:'16px' }}>
+    <div style={{ background:'var(--bg-surface)', borderRadius:16, padding:24,
+      width:'100%', maxWidth:440, display:'flex', flexDirection:'column', gap:12,
+      boxShadow:'0 8px 32px rgba(0,0,0,0.3)', maxHeight:'85vh', overflowY:'auto' }}>
+      <div style={{ fontWeight:800, fontSize:20, fontFamily:'var(--font-heading)',
+        background:'var(--grad-yellow)', WebkitBackgroundClip:'text',
+        WebkitTextFillColor:'transparent' }}>Message Requests</div>
+      {msgRequests.length === 0 && (
+        <div style={{ textAlign:'center', color:'var(--text-muted)', padding:20 }}>No pending requests</div>
+      )}
+      {msgRequests.map(req => (
+        <div key={req._id} style={{ borderRadius:12, background:'var(--bg-elevated)',
+          border:'1px solid var(--border)', overflow:'hidden' }}>
+          {/* Top row: avatar + name */}
+          <div style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 14px 8px' }}>
+            <Avatar src={req.senderId?.profilePicture} username={req.senderId?.username||'?'} size={44} />
+            <div style={{ flex:1, minWidth:0 }}>
+              <div style={{ fontWeight:700, fontSize:15, fontFamily:'var(--font-heading)',
+                overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                {req.senderId?.username||'User'}
               </div>
-            ))}
-            <button className="btn btn-ghost" onClick={() => setShowMsgReqs(false)}>Close</button>
+              <div style={{ fontSize:12, color:'var(--text-muted)', marginTop:2 }}>
+                wants to message you
+              </div>
+            </div>
+          </div>
+          {/* Bottom row: buttons full width */}
+          <div style={{ display:'flex', gap:8, padding:'0 14px 12px' }}>
+            <button className="btn btn-primary" style={{ flex:1, padding:'8px' }}
+              onClick={() => handleAcceptMsgReq(req._id)}>Accept</button>
+            <button className="btn btn-secondary" style={{ flex:1, padding:'8px', color:'var(--red)', borderColor:'var(--red)' }}
+              onClick={() => handleDeclineMsgReq(req._id)}>Decline</button>
           </div>
         </div>
-      )}
+      ))}
+      <button className="btn btn-ghost" style={{ marginTop:4 }}
+        onClick={() => setShowMsgReqs(false)}>Close</button>
+    </div>
+  </div>
+)}
 
       {/* ── My Invites Modal ── */}
-      {showInvites && (
-        <div style={{ position:'fixed', inset:0, background:'rgba(20,24,60,0.55)',
-          display:'flex', alignItems:'center', justifyContent:'center', zIndex:999 }}>
-          <div style={{ background:'var(--bg-surface)', borderRadius:16, padding:28,
-            width:'90%', maxWidth:440, display:'flex', flexDirection:'column', gap:14,
-            boxShadow:'0 8px 32px rgba(0,0,0,0.3)', maxHeight:'80vh', overflowY:'auto' }}>
-            <div style={{ fontWeight:700, fontSize:18 }}>Group Invites</div>
-            {myInvites.length === 0 && (
-              <div style={{ textAlign:'center', color:'var(--text-muted)', padding:20 }}>No pending invites</div>
-            )}
-            {myInvites.map(inv => (
-              <div key={inv._id} style={{ display:'flex', alignItems:'center', gap:12,
-                padding:'12px 14px', borderRadius:12, background:'var(--bg-elevated)',
-                border:'1px solid var(--border)' }}>
-                <div style={{ width:40, height:40, borderRadius:'50%', background:'var(--yellow)',
-                  display:'flex', alignItems:'center', justifyContent:'center',
-                  color:'#fff', fontWeight:700, fontSize:16, flexShrink:0 }}>
-                  {inv.groupId?.name?.[0]?.toUpperCase()||'G'}
-                </div>
-                <div style={{ flex:1, minWidth:0 }}>
-                  <div style={{ fontWeight:600, fontSize:14 }}>{inv.groupId?.name||'Group'}</div>
-                  <div style={{ fontSize:12, color:'var(--text-muted)' }}>
-                    Invited by {inv.invitedBy?.username}
-                  </div>
-                </div>
-                <div style={{ display:'flex', gap:6 }}>
-                  <button className="btn btn-sm btn-primary"
-                    onClick={() => handleAcceptInvite(inv._id, inv.groupId)}>Accept</button>
-                  <button className="btn btn-sm btn-ghost"
-                    style={{ color:'var(--red)' }}
-                    onClick={() => handleDeclineInvite(inv._id)}>Decline</button>
-                </div>
+      {/* ── My Invites Modal ── */}
+{showInvites && (
+  <div style={{ position:'fixed', inset:0, background:'rgba(20,24,60,0.55)',
+    display:'flex', alignItems:'center', justifyContent:'center', zIndex:999, padding:'16px' }}>
+    <div style={{ background:'var(--bg-surface)', borderRadius:16, padding:24,
+      width:'100%', maxWidth:440, display:'flex', flexDirection:'column', gap:12,
+      boxShadow:'0 8px 32px rgba(0,0,0,0.3)', maxHeight:'85vh', overflowY:'auto' }}>
+      <div style={{ fontWeight:800, fontSize:20, fontFamily:'var(--font-heading)',
+        background:'var(--grad-yellow)', WebkitBackgroundClip:'text',
+        WebkitTextFillColor:'transparent' }}>Group Invites</div>
+      {myInvites.length === 0 && (
+        <div style={{ textAlign:'center', color:'var(--text-muted)', padding:20 }}>No pending invites</div>
+      )}
+      {myInvites.map(inv => (
+        <div key={inv._id} style={{ borderRadius:12, background:'var(--bg-elevated)',
+          border:'1px solid var(--border)', overflow:'hidden' }}>
+          {/* Top row: icon + name + invited by */}
+          <div style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 14px 8px' }}>
+            <div style={{ width:44, height:44, borderRadius:'50%', background:'var(--grad-yellow)',
+              display:'flex', alignItems:'center', justifyContent:'center',
+              color:'#1a1d2e', fontWeight:800, fontSize:18, flexShrink:0 }}>
+              {inv.groupId?.name?.[0]?.toUpperCase()||'G'}
+            </div>
+            <div style={{ flex:1, minWidth:0 }}>
+              <div style={{ fontWeight:700, fontSize:15, fontFamily:'var(--font-heading)',
+                overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                {inv.groupId?.name||'Group'}
               </div>
-            ))}
-            <button className="btn btn-ghost" onClick={() => setShowInvites(false)}>Close</button>
+              <div style={{ fontSize:12, color:'var(--text-muted)', marginTop:2 }}>
+                Invited by <strong>{inv.invitedBy?.username}</strong>
+              </div>
+            </div>
+          </div>
+          {/* Bottom row: buttons full width */}
+          <div style={{ display:'flex', gap:8, padding:'0 14px 12px' }}>
+            <button className="btn btn-primary" style={{ flex:1, padding:'8px' }}
+              onClick={() => handleAcceptInvite(inv._id, inv.groupId)}>Accept</button>
+            <button className="btn btn-secondary" style={{ flex:1, padding:'8px', color:'var(--red)', borderColor:'var(--red)' }}
+              onClick={() => handleDeclineInvite(inv._id)}>Decline</button>
           </div>
         </div>
-      )}
+      ))}
+      <button className="btn btn-ghost" style={{ marginTop:4 }}
+        onClick={() => setShowInvites(false)}>Close</button>
+    </div>
+  </div>
+)}
     </div>
   );
 }

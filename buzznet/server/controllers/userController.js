@@ -145,9 +145,18 @@ const followUser = async (req, res, next) => {
       return res.json({ success: true, requested: true, message: "Follow request sent." });
     }
 
-    await User.findByIdAndUpdate(targetId,      { $addToSet: { followers: currentUserId } });
-    await User.findByIdAndUpdate(currentUserId, { $addToSet: { following: targetId } });
-    res.json({ success: true, requested: false, message: `Now following ${targetUser.username}.` });
+  await User.findByIdAndUpdate(targetId,      { $addToSet: { followers: currentUserId } });
+await User.findByIdAndUpdate(currentUserId, { $addToSet: { following: targetId } });
+
+// ✅ Notify the target user that someone followed them
+try {
+  const io = req.app.get("io");
+  io.of("/chat").to(`user:${targetId}`).emit("newFollower", {
+    by: { _id: req.user._id, username: req.user.username, profilePicture: req.user.profilePicture },
+  });
+} catch (e) { console.error("[socket newFollower]", e.message); }
+
+res.json({ success: true, requested: false, message: `Now following ${targetUser.username}.` });
   } catch (err) { next(err); }
 };
 

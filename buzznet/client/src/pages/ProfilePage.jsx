@@ -19,7 +19,6 @@ export default function ProfilePage() {
   const [loading, setLoading]   = useState(true);
   const [editOpen,      setEditOpen]      = useState(false);
   const [notifOpen,     setNotifOpen]     = useState(false);
-  const [acceptedNotif, setAcceptedNotif] = useState(null);
   const [notifSettings, setNotifSettings] = useState({
     followRequest: false, followAccepted: false,
     messageRequest: false, messageAccepted: false,
@@ -62,14 +61,6 @@ export default function ProfilePage() {
       });
     }
   }, [profile, isOwn]);
-
-  // Listen for follow request accepted → show persistent modal
-  useEffect(() => {
-    if (!chatSocket) return;
-    const handler = ({ by }) => setAcceptedNotif({ type: 'follow', username: by.username });
-    chatSocket.on('followRequestAccepted', handler);
-    return () => chatSocket.off('followRequestAccepted', handler);
-  }, [chatSocket]);
 
   const isFollowing = profile?.followers?.some(f =>
     (typeof f === 'object' ? f._id : f) === user?._id
@@ -428,27 +419,6 @@ export default function ProfilePage() {
         </Modal>
       )}
 
-      {/* ── Accepted Notification Modal ───────────────────────────── */}
-      {acceptedNotif && (
-        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.6)', zIndex:9999,
-          display:'flex', alignItems:'center', justifyContent:'center' }}>
-          <div style={{ background:'var(--bg-card,#fff)', borderRadius:20, padding:'32px 28px',
-            maxWidth:340, width:'90%', textAlign:'center', boxShadow:'0 8px 40px rgba(0,0,0,0.3)' }}>
-            <div style={{ fontSize:48, marginBottom:12 }}>🎉</div>
-            <div style={{ fontSize:18, fontWeight:700, marginBottom:8, color:'var(--text-primary)' }}>
-              {acceptedNotif.type === 'follow' ? 'Follow Request Accepted!' : 'Message Request Accepted!'}
-            </div>
-            <div style={{ fontSize:15, color:'var(--text-secondary)', marginBottom:24, lineHeight:1.6 }}>
-              <strong>{acceptedNotif.username}</strong>{' '}
-              {acceptedNotif.type === 'follow'
-                ? 'accepted your follow request. You can now see their posts!'
-                : 'accepted your message request. You can now chat!'}
-            </div>
-            <button className="btn btn-primary" style={{ padding:'10px 36px', fontSize:15, fontWeight:700 }}
-              onClick={() => setAcceptedNotif(null)}>OK</button>
-          </div>
-        </div>
-      )}
 
       {/* ── Email Notification Settings Modal ───────────────────────── */}
       {notifOpen && (
