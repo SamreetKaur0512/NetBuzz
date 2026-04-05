@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { SocketProvider } from './context/SocketContext';
 import Sidebar from './components/layout/Sidebar';
 import { ToastContainer } from './components/ui';
+const NotificationsPage = lazy(() => import('./pages/NotificationsPage'));
 
 // ── Lazy-loaded pages (each becomes its own JS chunk — faster initial load) ───
 const LoginPage           = lazy(() => import('./pages/LoginPage'));
@@ -18,6 +19,7 @@ const GameRoom            = lazy(() => import('./pages/GameRoom'));
 const SearchPage          = lazy(() => import('./pages/SearchPage'));
 const BlockedUsersPage    = lazy(() => import('./pages/BlockedUsersPage'));
 const FollowRequestsPage  = lazy(() => import('./pages/FollowRequestsPage'));
+
 
 // ── Suspense fallback — shown while any lazy page loads ───────────────────────
 const PageLoader = () => (
@@ -80,6 +82,7 @@ export default function App() {
               <Route path="/search"          element={<SearchPage />} />
               <Route path="/blocked"          element={<BlockedUsersPage />} />
               <Route path="/follow-requests"   element={<FollowRequestsPage />} />
+              <Route path="/notifications" element={<NotificationsPage />} />
             </Route>
 
             {/* Fallback */}

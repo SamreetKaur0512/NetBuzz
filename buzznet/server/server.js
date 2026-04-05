@@ -15,7 +15,7 @@ const messageRoutes = require("./routes/messages");
 const gameRoutes    = require("./routes/games");
 const groupRoutes   = require("./routes/groups");
 const aiRoutes      = require("./routes/ai");
-
+const notificationRoutes = require("./routes/notifications");
 // ─── Socket Handler Imports ───────────────────────────────────────────────────
 const registerChatSocket = require("./socket/chatSocket");
 const registerGameSocket = require("./socket/gameSocket");
@@ -105,6 +105,7 @@ app.use("/api/messages", messageRoutes);
 app.use("/api/games",    gameRoutes);
 app.use("/api/ai",       aiRoutes);
 app.use("/api/groups",   groupRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 app.get("/api/health", (_req, res) =>
   res.json({ status: "OK", message: "Server is running", timestamp: new Date() })

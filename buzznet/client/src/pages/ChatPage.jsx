@@ -22,7 +22,6 @@ export default function ChatPage() {
   const [isTyping, setIsTyping]  = useState(false);
   const [typing,   setTyping]    = useState(false);
   const [mobileView, setMobileView] = useState('list');
-  const [acceptedNotif, setAcceptedNotif] = useState(null);
 
   // Group info panel
   const [showGroupInfo, setShowGroupInfo] = useState(false);
@@ -166,12 +165,9 @@ export default function ChatPage() {
               : (g.unreadCount || 0),                    // own msg → no change
       } : g));
     });
-    chatSocket.on('chatRequestAccepted', ({ by }) => {
-      setAcceptedNotif({ type: 'message', username: by.username, picture: by.profilePicture });
-      // Refresh conversations
-      chatAPI.getConvos().then(r => setConvos(r.data.conversations || [])).catch(() => {});
-    });
-
+chatSocket.on('chatRequestAccepted', () => {
+  chatAPI.getConvos().then(r => setConvos(r.data.conversations || [])).catch(() => {});
+});
     chatSocket.on('chatRequest', (req) => {
       setMsgRequests(prev => prev.some(r => r._id === req.requestId) ? prev : [
         { _id: req.requestId, senderId: req.from, status: 'pending' }, ...prev
@@ -716,9 +712,8 @@ export default function ChatPage() {
                         background:'var(--bg-surface)', borderRadius:20, padding:'4px 6px 4px 4px' }}>
                         <div onClick={() => {
   if (!mid) return;
-  // ✅ Do not navigate to profile of blocked/blocking user
-  const isBlockedMember = blockedUsers.some(b => b._id?.toString() === mid?.toString());
-  if (isBlockedMember) return;
+  const isBlocked = blockedUsers.some(b => b._id?.toString() === mid?.toString());
+  if (isBlocked) return;
   navigate(`/profile/${mid}`);
 }}
   style={{ display:'flex', alignItems:'center', gap:6,
@@ -806,8 +801,7 @@ export default function ChatPage() {
                         {isOut && activeConvo.type !== 'group' && (
                           <span style={{ fontSize: 10 }}>{isRead ? '✓✓' : '✓'}</span>
                         )}
-                        {isOut && activeConvo.type === 'group' && readByUsers.length > 0 && (() => {
-  // ✅ Filter out blocked users from seen list
+                         {isOut && activeConvo.type === 'group' && readByUsers.length > 0 && (() => {
   const visibleReaders = readByUsers.filter(r => {
     const rid = (r._id || r)?.toString();
     return !blockedUsers.some(b => b._id?.toString() === rid);
@@ -830,8 +824,6 @@ export default function ChatPage() {
     </span>
   );
 })()}
-        
-
                         {/* Delete buttons — appear on hover */}
                         <span
                           className="msg-delete-wrap"
@@ -946,27 +938,6 @@ export default function ChatPage() {
       )}
 
       {/* ── Invite Member Modal ── */}
-      {/* Accepted notification modal — stays until user clicks OK */}
-      {acceptedNotif && (
-        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.55)', zIndex:9999,
-          display:'flex', alignItems:'center', justifyContent:'center' }}>
-          <div style={{ background:'var(--bg-card)', borderRadius:20, padding:'32px 28px',
-            maxWidth:340, width:'90%', textAlign:'center', boxShadow:'0 8px 40px rgba(0,0,0,0.3)' }}>
-            <div style={{ fontSize:48, marginBottom:12 }}>🎉</div>
-            <div style={{ fontSize:18, fontWeight:700, color:'var(--text-primary)', marginBottom:8 }}>
-              Request Accepted!
-            </div>
-            <div style={{ fontSize:15, color:'var(--text-secondary)', marginBottom:24, lineHeight:1.6 }}>
-              <strong>{acceptedNotif.username}</strong> accepted your message request.<br/>
-              You can now chat with them!
-            </div>
-            <button className="btn btn-primary" style={{ padding:'10px 36px', fontSize:15, fontWeight:700 }}
-              onClick={() => setAcceptedNotif(null)}>
-              OK
-            </button>
-          </div>
-        </div>
-      )}
 
       {showInvite && (
         <div style={{ position:'fixed', inset:0, background:'rgba(20,24,60,0.55)',

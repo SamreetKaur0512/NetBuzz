@@ -28,10 +28,15 @@ export function SocketProvider({ children }) {
     setNotifQueue(prev => [...prev, notif]);
   }, []);
 
-  const dismissNotif = useCallback(() => {
-    setActiveNotif(null);
-  }, []);
-
+ const dismissNotif = useCallback((notifId) => {
+  // Mark as read in DB so it shows as read in notifications page
+  if (notifId) {
+    import('../services/api').then(m => {
+      m.notificationAPI?.markRead(notifId).catch(() => {});
+    });
+  }
+  setActiveNotif(null);
+}, []);
   useEffect(() => {
     if (!token) {
       setChatSocket(s => { s?.disconnect(); return null; });
@@ -116,6 +121,7 @@ export function SocketProvider({ children }) {
             <button className="btn btn-primary"
               style={{ padding:'10px 36px', fontSize:15, fontWeight:700 }}
               onClick={dismissNotif}>OK</button>
+              onClick={() => dismissNotif(activeNotif._id)}
           </div>
         </div>
       )}

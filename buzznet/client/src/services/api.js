@@ -111,5 +111,10 @@ export const gameAPI = {
   getRoom:    (code) => api.get(`/api/games/${code}`),
   getHistory: ()     => api.get('/api/games/history'),
 };
-
+// ── Notifications ─────────────────────────────────────────────────────────────
+export const notificationAPI = {
+  getAll:      () =>  api.get('/api/notifications'),
+  markRead:    (id) => api.put(`/api/notifications/${id}/read`),
+  markAllRead: () =>  api.put('/api/notifications/read-all'),
+};
 export default api;

@@ -1,5 +1,6 @@
 const ChatRequest = require("../models/ChatRequest");
 const User        = require("../models/User");
+const Notification = require("../models/Notification");
 
 // ─── POST /api/chat/request ───────────────────────────────────────────────────
 const sendChatRequest = async (req, res, next) => {
@@ -93,22 +94,35 @@ const acceptChatRequest = async (req, res, next) => {
     await request.save();
 
     // Notify the original sender
-    const io = req.app.get("io");
-    io.of("/chat").to(`user:${request.senderId}`).emit("chatRequestAccepted", {
-      requestId: request._id,
-      by: { _id: req.user._id, username: req.user.username, profilePicture: req.user.profilePicture },
-    });
-
-    // Email notification if sender has it enabled
+   // Socket + DB notification to the original sender
     try {
-      const sender = await User.findById(request.senderId).select("email username emailNotifications");
-      if (sender?.emailNotifications?.messageAccepted) {
-        const { sendNotificationEmail } = require("../utils/email");
-        await sendNotificationEmail(sender.email, sender.username, "messageAccepted", req.user.username);
-      }
-    } catch (e) { console.error("[email notify]", e.message); }
+      const Notification = require("../models/Notification");
+      const notif = await Notification.create({
+        userId:       request.senderId,
+        type:         "messageAccepted",
+        fromUserId:   req.user._id,
+        fromUsername: req.user.username,
+        fromPicture:  req.user.profilePicture || "",
+      });
+      const io = req.app.get("io");
+      io.of("/chat").to(`user:${request.senderId}`).emit("chatRequestAccepted", {
+        requestId: request._id,
+        by: { _id: req.user._id, username: req.user.username, profilePicture: req.user.profilePicture },
+        notifId: notif._id,
+      });
+    } catch (e) { console.error("[notif notify]", e.message); }
 
     res.status(200).json({ success: true, message: "Chat request accepted.", request });
+  // ✅ Save notification to DB
+try {
+  await Notification.create({
+    userId:       request.senderId,
+    type:         "messageAccepted",
+    fromUserId:   req.user._id,
+    fromUsername: req.user.username,
+    fromPicture:  req.user.profilePicture || "",
+  });
+} catch (e) { console.error("[notif save]", e.message); }
   } catch (err) {
     next(err);
   }

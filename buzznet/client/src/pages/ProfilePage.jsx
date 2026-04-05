@@ -17,13 +17,7 @@ export default function ProfilePage() {
   const [profile, setProfile]   = useState(null);
   const [posts, setPosts]       = useState([]);
   const [loading, setLoading]   = useState(true);
-  const [editOpen,      setEditOpen]      = useState(false);
-  const [notifOpen,     setNotifOpen]     = useState(false);
-  const [notifSettings, setNotifSettings] = useState({
-    followRequest: false, followAccepted: false,
-    messageRequest: false, messageAccepted: false,
-    newMessage: false, groupInvite: false,
-  });
+  const [editOpen,      setEditOpen]      = useState(false); 
   const [editForm, setEditForm] = useState({ username: '', bio: '', isPrivate: false });
   const [editFile, setEditFile] = useState(null);
   const [editPreview, setEditPreview] = useState('');
@@ -47,20 +41,6 @@ export default function ProfilePage() {
   const [deleting, setDeleting]           = useState(false);
 
   const isOwn = user?._id === id;
-
-  // Load notification settings from profile when profile loads
-  useEffect(() => {
-    if (profile?.emailNotifications && isOwn) {
-      setNotifSettings({
-        followRequest:   !!profile.emailNotifications.followRequest,
-        followAccepted:  !!profile.emailNotifications.followAccepted,
-        messageRequest:  !!profile.emailNotifications.messageRequest,
-        messageAccepted: !!profile.emailNotifications.messageAccepted,
-        newMessage:      !!profile.emailNotifications.newMessage,
-        groupInvite:     !!profile.emailNotifications.groupInvite,
-      });
-    }
-  }, [profile, isOwn]);
 
   const isFollowing = profile?.followers?.some(f =>
     (typeof f === 'object' ? f._id : f) === user?._id
@@ -155,16 +135,6 @@ export default function ProfilePage() {
     setListModal({ type, users: populated });
   };
 
-  const handleSaveNotifSettings = async () => {
-  try {
-    const res = await userAPI.updateNotifications(id, notifSettings);
-    updateUser(res.data.user);
-    // ✅ Sync profile state so the useEffect doesn't reset toggles on re-render
-    setProfile(p => ({ ...p, emailNotifications: res.data.user.emailNotifications }));
-    setNotifOpen(false);
-    toast.success('Notification settings saved!');
-  } catch (e) { toast.error('Failed to save settings'); }
-};
 
   const handleEditFile = (e) => {
     const f = e.target.files[0];
@@ -285,10 +255,7 @@ export default function ProfilePage() {
                 <button className="btn btn-secondary btn-sm" onClick={() => setEditOpen(true)}>
                   <Icons.Settings /> Edit Profile
                 </button>
-                <button className="btn btn-secondary btn-sm" onClick={() => setNotifOpen(true)}
-                  style={{ fontSize: 12 }}>
-                  🔔 Notifications
-                </button>
+          
 
                 <button className="btn btn-secondary btn-sm"
                   onClick={() => { setSetPassOpen(true); setPassErr(''); setCurrentPass(''); setNewPass(''); setConfirmPass(''); }}
@@ -416,43 +383,6 @@ export default function ProfilePage() {
               ))}
             </div>
           )}
-        </Modal>
-      )}
-
-
-      {/* ── Email Notification Settings Modal ───────────────────────── */}
-      {notifOpen && (
-        <Modal title="🔔 Email Notifications" onClose={() => setNotifOpen(false)}>
-          <div style={{ fontSize:13, color:'var(--text-muted)', marginBottom:16, lineHeight:1.6 }}>
-            Get an email when these things happen. All <strong>off by default</strong>.
-            Emails go to <strong>{profile?.email}</strong>.
-          </div>
-          {[
-            { key:'followRequest',   label:'Someone sends you a follow request' },
-            { key:'followAccepted',  label:'Someone accepts your follow request' },
-            { key:'messageRequest',  label:'Someone sends you a message request' },
-            { key:'messageAccepted', label:'Someone accepts your message request' },
-            { key:'newMessage',      label:'Someone sends you a new message' },
-            { key:'groupInvite',     label:'Someone invites you to a group' },
-          ].map(({ key, label }) => (
-            <div key={key} style={{ display:'flex', alignItems:'center', justifyContent:'space-between',
-              padding:'12px 0', borderBottom:'1px solid var(--border)' }}>
-              <span style={{ fontSize:14, color:'var(--text-primary)' }}>{label}</span>
-              <div
-                onClick={() => setNotifSettings(s => ({ ...s, [key]: !s[key] }))}
-                style={{ position:'relative', width:44, height:24, borderRadius:12, cursor:'pointer',
-                  background: notifSettings[key] ? '#F7A325' : 'var(--border)', transition:'background 0.2s', flexShrink:0 }}>
-                <div style={{ position:'absolute', top:3,
-                  left: notifSettings[key] ? 22 : 3,
-                  width:18, height:18, borderRadius:'50%', background:'#fff',
-                  transition:'left 0.2s', boxShadow:'0 1px 4px rgba(0,0,0,0.2)' }} />
-              </div>
-            </div>
-          ))}
-          <div style={{ display:'flex', gap:10, marginTop:16 }}>
-            <button className="btn btn-secondary btn-full" onClick={() => setNotifOpen(false)}>Cancel</button>
-            <button className="btn btn-primary btn-full" onClick={handleSaveNotifSettings}>Save</button>
-          </div>
         </Modal>
       )}
 

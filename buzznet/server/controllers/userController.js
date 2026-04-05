@@ -9,7 +9,7 @@ const Message       = require("../models/Message");
 const GroupMessage  = require("../models/GroupMessage");
 const Group         = require("../models/Group");
 const GroupInvite   = require("../models/GroupInvite");
-
+const Notification = require("../models/Notification");
 // GET /api/users/:id
 const getUserById = async (req, res, next) => {
   try {
@@ -145,10 +145,10 @@ const followUser = async (req, res, next) => {
       return res.json({ success: true, requested: true, message: "Follow request sent." });
     }
 
-  await User.findByIdAndUpdate(targetId,      { $addToSet: { followers: currentUserId } });
+ await User.findByIdAndUpdate(targetId,      { $addToSet: { followers: currentUserId } });
 await User.findByIdAndUpdate(currentUserId, { $addToSet: { following: targetId } });
 
-// ✅ Notify the target user that someone followed them
+// ✅ Socket notification
 try {
   const io = req.app.get("io");
   io.of("/chat").to(`user:${targetId}`).emit("newFollower", {
@@ -156,9 +156,25 @@ try {
   });
 } catch (e) { console.error("[socket newFollower]", e.message); }
 
+// ✅ Save notification to DB
+try {
+  const Notification = require("../models/Notification");
+  const notif = await Notification.create({
+    userId:       targetId,
+    type:         "newFollower",
+    fromUserId:   req.user._id,
+    fromUsername: req.user.username,
+    fromPicture:  req.user.profilePicture || "",
+  });
+  // Send notifId so frontend can mark as read when OK clicked
+  const io = req.app.get("io");
+  io.of("/chat").to(`user:${targetId}`).emit("newFollower", {
+    by: { _id: req.user._id, username: req.user.username, profilePicture: req.user.profilePicture },
+    notifId: notif._id,
+  });
+} catch (e) { console.error("[notif save]", e.message); }
+
 res.json({ success: true, requested: false, message: `Now following ${targetUser.username}.` });
-  } catch (err) { next(err); }
-};
 
 const cancelFollowRequest = async (req, res, next) => {
   try {
@@ -187,25 +203,34 @@ const acceptFollowRequest = async (req, res, next) => {
     await User.findByIdAndUpdate(req.user._id,     { $addToSet: { followers: request.senderId } });
     await User.findByIdAndUpdate(request.senderId, { $addToSet: { following: req.user._id } });
 
-    // Socket notification to the person who sent the follow request
+   // Socket + DB notification to the person who sent the follow request
     try {
+      const Notification = require("../models/Notification");
+      const notif = await Notification.create({
+        userId:       request.senderId,
+        type:         "followAccepted",
+        fromUserId:   req.user._id,
+        fromUsername: req.user.username,
+        fromPicture:  req.user.profilePicture || "",
+      });
       const io = req.app.get("io");
       io.of("/chat").to(`user:${request.senderId}`).emit("followRequestAccepted", {
         by: { _id: req.user._id, username: req.user.username, profilePicture: req.user.profilePicture },
+        notifId: notif._id,
       });
     } catch (e) { console.error("[socket notify]", e.message); }
 
-    // Email notification
-    try {
-      const sender = await User.findById(request.senderId).select("email username emailNotifications");
-      if (sender?.emailNotifications?.followAccepted) {
-        const { sendNotificationEmail } = require("../utils/email");
-        await sendNotificationEmail(sender.email, sender.username, "followAccepted", req.user.username);
-      }
-    } catch (e) { console.error("[email notify]", e.message); }
-
     res.json({ success: true, message: "Follow request accepted." });
-  } catch (err) { next(err); }
+  // ✅ Save notification to DB
+try {
+  await Notification.create({
+    userId:       request.senderId,
+    type:         "followAccepted",
+    fromUserId:   req.user._id,
+    fromUsername: req.user.username,
+    fromPicture:  req.user.profilePicture || "",
+  });
+} catch (e) { console.error("[notif save]", e.message); }
 };
 
 const rejectFollowRequest = async (req, res, next) => {
@@ -259,11 +284,21 @@ const blockUser = async (req, res, next) => {
     res.json({ success: true, blocked: true, message: `${targetUser.username} blocked.` });
   } catch (err) { next(err); }
 };
-
 const getBlockedUsers = async (req, res, next) => {
   try {
-    const user = await User.findById(req.user._id).select("blockedUsers").populate("blockedUsers", "username profilePicture");
-    res.json({ success: true, blockedUsers: user.blockedUsers || [] });
+    // ✅ Return BOTH users I blocked AND users who blocked me
+    const me = await User.findById(req.user._id).select("blockedUsers").populate("blockedUsers", "username profilePicture");
+    const theyBlockedMe = await User.find({ blockedUsers: req.user._id }).select("_id username profilePicture").lean();
+    
+    // Merge both lists, deduplicate by _id
+    const myBlocked = me.blockedUsers || [];
+    const combined = [...myBlocked];
+    for (const u of theyBlockedMe) {
+      if (!combined.some(b => b._id?.toString() === u._id?.toString())) {
+        combined.push(u);
+      }
+    }
+    res.json({ success: true, blockedUsers: combined });
   } catch (err) { next(err); }
 };
 

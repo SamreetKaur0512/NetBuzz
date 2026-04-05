@@ -1,28 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useSocket } from '../../context/SocketContext';
 import { Avatar, Icons } from '../ui';
-import { userAPI } from '../../services/api';
+import { userAPI, notificationAPI } from '../../services/api';
 
 const NAV = [
-  { to: '/',               icon: Icons.Home,   label: 'Home'     },
-  { to: '/upload',         icon: Icons.Plus,   label: 'Create'   },
-  { to: '/search',         icon: Icons.Search, label: 'Search'   },
-  { to: '/chat',           icon: Icons.Chat,   label: 'Messages' },
-  { to: '/games',          icon: Icons.Game,   label: 'Games'    },
-  { to: '/blocked',        icon: Icons.Lock,   label: 'Blocked'  },
+  { to: '/',             icon: Icons.Home,   label: 'Home'          },
+  { to: '/upload',       icon: Icons.Plus,   label: 'Create'        },
+  { to: '/search',       icon: Icons.Search, label: 'Search'        },
+  { to: '/chat',         icon: Icons.Chat,   label: 'Messages'      },
+  { to: '/notifications',icon: Icons.Bell,   label: 'Notifications' },
+  { to: '/games',        icon: Icons.Game,   label: 'Games'         },
+  { to: '/blocked',      icon: Icons.Lock,   label: 'Blocked'       },
 ];
 
 export default function Sidebar() {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
+  const { user, logout }    = useAuth();
+  const { notifQueue, activeNotif } = useSocket();
+  const navigate            = useNavigate();
   const [followReqCount, setFollowReqCount] = useState(0);
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [unreadNotifs,   setUnreadNotifs]   = useState(0);
+  const [menuOpen,       setMenuOpen]       = useState(false);
 
   useEffect(() => {
     if (!user) return;
     userAPI.getFollowRequests()
       .then(r => setFollowReqCount(r.data.requests?.length || 0))
+      .catch(() => {});
+    notificationAPI.getAll()
+      .then(r => setUnreadNotifs(r.data.unreadCount || 0))
       .catch(() => {});
     const t = setInterval(() => {
       userAPI.getFollowRequests()
@@ -32,59 +39,60 @@ export default function Sidebar() {
     return () => clearInterval(t);
   }, [user]);
 
+  // Increment badge when new notification arrives
+  useEffect(() => {
+    if (activeNotif) setUnreadNotifs(p => p + 1);
+  }, [activeNotif]);
+
   const handleNavClick = () => setMenuOpen(false);
 
   return (
     <>
-      {/* ── Hamburger button — only on mobile ─────────────────────────── */}
-      <button
-        className="hamburger-btn"
-        onClick={() => setMenuOpen(v => !v)}
-        aria-label="Toggle menu"
-      >
+      <button className="hamburger-btn" onClick={() => setMenuOpen(v => !v)} aria-label="Toggle menu">
         <span /><span /><span />
       </button>
 
-      {/* ── Overlay — closes menu when tapping outside ────────────────── */}
-      {menuOpen && (
-        <div className="hamburger-overlay" onClick={() => setMenuOpen(false)} />
-      )}
+      {menuOpen && <div className="hamburger-overlay" onClick={() => setMenuOpen(false)} />}
 
-      {/* ── Sidebar ───────────────────────────────────────────────────── */}
       <nav className={`sidebar${menuOpen ? ' sidebar-open' : ''}`}>
         <div className="sidebar-logo">BuzzNet.</div>
 
         <div className="nav-items">
           {NAV.map(({ to, icon: Icon, label }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={to === '/'}
+            <NavLink key={to} to={to} end={to === '/'}
               className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
-              onClick={handleNavClick}
-            >
-              <Icon />
+              onClick={() => {
+                if (to === '/notifications') setUnreadNotifs(0);
+                handleNavClick();
+              }}>
+              <div style={{ position: 'relative', display: 'inline-flex' }}>
+                <Icon />
+                {to === '/notifications' && unreadNotifs > 0 && (
+                  <span style={{ position: 'absolute', top: -4, right: -4,
+                    background: 'var(--red)', color: '#fff', borderRadius: '50%',
+                    width: 16, height: 16, fontSize: 10, fontWeight: 700,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {unreadNotifs > 9 ? '9+' : unreadNotifs}
+                  </span>
+                )}
+              </div>
               <span className="nav-label">{label}</span>
             </NavLink>
           ))}
 
           {user && (
-            <NavLink
-              to={`/profile/${user._id}`}
+            <NavLink to={`/profile/${user._id}`}
               className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
-              onClick={handleNavClick}
-            >
+              onClick={handleNavClick}>
               <Icons.User />
               <span className="nav-label">Profile</span>
             </NavLink>
           )}
 
           {user && (
-            <NavLink
-              to="/follow-requests"
+            <NavLink to="/follow-requests"
               className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
-              onClick={handleNavClick}
-            >
+              onClick={handleNavClick}>
               <div style={{ position: 'relative', display: 'inline-flex' }}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
@@ -93,26 +101,26 @@ export default function Sidebar() {
                   <line x1="22" y1="11" x2="16" y2="11"/>
                 </svg>
                 {followReqCount > 0 && (
-                  <span style={{
-                    position: 'absolute', top: -4, right: -4,
-                    background: 'var(--red)', color: '#fff',
-                    borderRadius: '50%', width: 16, height: 16,
-                    fontSize: 10, fontWeight: 700,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}>{followReqCount}</span>
+                  <span style={{ position: 'absolute', top: -4, right: -4,
+                    background: 'var(--red)', color: '#fff', borderRadius: '50%',
+                    width: 16, height: 16, fontSize: 10, fontWeight: 700,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {followReqCount}
+                  </span>
                 )}
               </div>
-              <span className="nav-label">
-                Requests
-                <br />
-                <p style={{ fontSize: 13, color: 'dodgerblue', fontWeight: 400, margin: 0 }}>follow req. for private users</p>
+              <span className="nav-label">Requests
+                <br /><p style={{ fontSize: 13, color:'dodgerblue', fontWeight: 400, margin: 0 }}>
+                  follow req. for private users
+                </p>
               </span>
             </NavLink>
           )}
         </div>
 
         {user && (
-          <div className="sidebar-user" onClick={() => { navigate(`/profile/${user._id}`); handleNavClick(); }}>
+          <div className="sidebar-user"
+            onClick={() => { navigate(`/profile/${user._id}`); handleNavClick(); }}>
             <Avatar src={user.profilePicture} username={user.username} size={36} />
             <div className="sidebar-user-info">
               <div className="sidebar-user-name">{user.username}</div>
@@ -121,12 +129,8 @@ export default function Sidebar() {
           </div>
         )}
 
-        <button
-          className="nav-item"
-          style={{ margin: '0 10px 8px' }}
-          onClick={() => { logout(); handleNavClick(); }}
-          title="Log out"
-        >
+        <button className="nav-item" style={{ margin: '0 10px 8px' }}
+          onClick={() => { logout(); handleNavClick(); }} title="Log out">
           <Icons.Logout />
           <span className="nav-label">Log out</span>
         </button>
