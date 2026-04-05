@@ -69,10 +69,9 @@ const sendChatRequest = async (req, res, next) => {
     } catch (e) { console.error("[email notify]", e.message); }
 
     res.status(201).json({ success: true, message: "Chat request sent.", request });
-  } catch (err) {
-    next(err);
-  }
-};
+ 
+
+
 
 // ─── PUT /api/chat/accept ─────────────────────────────────────────────────────
 const acceptChatRequest = async (req, res, next) => {
