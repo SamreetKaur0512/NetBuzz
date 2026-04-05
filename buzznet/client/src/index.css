@@ -107,16 +107,17 @@ ul, ol { list-style: none; }
 @media (max-width: 1024px) { .app-main { margin-left: var(--nav-width-sm); } }
 @media (max-width: 640px) {
 .sidebar {
-  position: fixed; left: 0; top: 0;
+  position: fixed; left: -100%; top: 0;
   width: var(--nav-width);
   height: 100vh;
   display: flex;
   flex-direction: column;
   background: var(--grad-sidebar);
   border-right: 2px solid var(--border);
-  z-index: 100;
+  z-index: 250;
   overflow-y: auto;
   overflow-x: hidden;
+  transition: left 0.3s ease-in-out;
 }
   .sidebar.sidebar-open { left: 0; }
   .app-main { margin-left: 0 !important; padding-bottom: 0 !important; padding-top: 58px; }

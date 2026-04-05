@@ -54,7 +54,7 @@ export default function Sidebar() {
 
       {menuOpen && <div className="hamburger-overlay" onClick={() => setMenuOpen(false)} />}
 
-      <nav className={`sidebar${menuOpen ? ' sidebar-open' : ''}`}>
+      <nav className={`sidebar ${menuOpen ? 'sidebar-open' : ''}`}>
         <div className="sidebar-logo">BuzzNet.</div>
 
         <div className="nav-items">
