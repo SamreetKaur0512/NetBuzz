@@ -9,7 +9,7 @@ const Message       = require("../models/Message");
 const GroupMessage  = require("../models/GroupMessage");
 const Group         = require("../models/Group");
 const GroupInvite   = require("../models/GroupInvite");
-const Notification = require("../models/Notification");
+
 // GET /api/users/:id
 const getUserById = async (req, res, next) => {
   try {
@@ -23,7 +23,6 @@ const getUserById = async (req, res, next) => {
     const viewerId = req.user?._id?.toString();
     const isOwn    = viewerId && viewerId === user._id.toString();
 
-    // Re-fetch with password field only to compute hasPassword
     const userWithPass = await User.findById(req.params.id).select("+password");
     const hasPassword  = !!userWithPass?.password;
 
@@ -74,10 +73,9 @@ const updateUser = async (req, res, next) => {
     const allowed = ["username", "bio", "isPrivate"];
     const updates = {};
     allowed.forEach(f => { if (req.body[f] !== undefined) updates[f] = req.body[f]; });
-   if (req.file) updates.profilePicture = req.file.cloudinaryUrl || `/${req.file.path.replace(/\\\\/g, "/")}`;
+    if (req.file) updates.profilePicture = `/${req.file.path.replace(/\\/g, "/")}`;
 
     if (updates.username) {
-      // Enforce uniqueness for display name (case-insensitive), excluding self
       const exists = await User.findOne({
         username: { $regex: `^${updates.username.trim()}$`, $options: "i" },
         _id: { $ne: new mongoose.Types.ObjectId(req.params.id) },
@@ -91,7 +89,6 @@ const updateUser = async (req, res, next) => {
       req.params.id, { $set: updates }, { new: true, runValidators: true }
     ).select("-password -blockedUsers");
 
-    // Also return hasPassword so the profile page stays in sync
     const userWithPass = await User.findById(req.params.id).select("+password");
     const userObj = updatedUser.toObject();
     userObj.hasPassword = !!userWithPass?.password;
@@ -134,7 +131,7 @@ const followUser = async (req, res, next) => {
       } else {
         await FollowRequest.create({ senderId: currentUserId, receiverId: targetId });
       }
-      // ✅ Email notification to the receiver
+      // Email notification for followRequest
       try {
         const receiver = await User.findById(targetId).select("email username emailNotifications");
         if (receiver?.emailNotifications?.followRequest) {
@@ -145,36 +142,29 @@ const followUser = async (req, res, next) => {
       return res.json({ success: true, requested: true, message: "Follow request sent." });
     }
 
- await User.findByIdAndUpdate(targetId,      { $addToSet: { followers: currentUserId } });
-await User.findByIdAndUpdate(currentUserId, { $addToSet: { following: targetId } });
+    await User.findByIdAndUpdate(targetId,      { $addToSet: { followers: currentUserId } });
+    await User.findByIdAndUpdate(currentUserId, { $addToSet: { following: targetId } });
 
-// ✅ Socket notification
-try {
-  const io = req.app.get("io");
-  io.of("/chat").to(`user:${targetId}`).emit("newFollower", {
-    by: { _id: req.user._id, username: req.user.username, profilePicture: req.user.profilePicture },
-  });
-} catch (e) { console.error("[socket newFollower]", e.message); }
+    // Socket + DB notification for public follow
+    try {
+      const Notification = require("../models/Notification");
+      const notif = await Notification.create({
+        userId:       targetId,
+        type:         "newFollower",
+        fromUserId:   req.user._id,
+        fromUsername: req.user.username,
+        fromPicture:  req.user.profilePicture || "",
+      });
+      const io = req.app.get("io");
+      io.of("/chat").to(`user:${targetId}`).emit("newFollower", {
+        by: { _id: req.user._id, username: req.user.username, profilePicture: req.user.profilePicture },
+        notifId: notif._id,
+      });
+    } catch (e) { console.error("[notif save]", e.message); }
 
-// ✅ Save notification to DB
-try {
-  const Notification = require("../models/Notification");
-  const notif = await Notification.create({
-    userId:       targetId,
-    type:         "newFollower",
-    fromUserId:   req.user._id,
-    fromUsername: req.user.username,
-    fromPicture:  req.user.profilePicture || "",
-  });
-  // Send notifId so frontend can mark as read when OK clicked
-  const io = req.app.get("io");
-  io.of("/chat").to(`user:${targetId}`).emit("newFollower", {
-    by: { _id: req.user._id, username: req.user.username, profilePicture: req.user.profilePicture },
-    notifId: notif._id,
-  });
-} catch (e) { console.error("[notif save]", e.message); }
-
-res.json({ success: true, requested: false, message: `Now following ${targetUser.username}.` });
+    res.json({ success: true, requested: false, message: `Now following ${targetUser.username}.` });
+  } catch (err) { next(err); }
+};
 
 const cancelFollowRequest = async (req, res, next) => {
   try {
@@ -203,7 +193,7 @@ const acceptFollowRequest = async (req, res, next) => {
     await User.findByIdAndUpdate(req.user._id,     { $addToSet: { followers: request.senderId } });
     await User.findByIdAndUpdate(request.senderId, { $addToSet: { following: req.user._id } });
 
-   // Socket + DB notification to the person who sent the follow request
+    // Socket + DB notification
     try {
       const Notification = require("../models/Notification");
       const notif = await Notification.create({
@@ -221,16 +211,7 @@ const acceptFollowRequest = async (req, res, next) => {
     } catch (e) { console.error("[socket notify]", e.message); }
 
     res.json({ success: true, message: "Follow request accepted." });
-  // ✅ Save notification to DB
-try {
-  await Notification.create({
-    userId:       request.senderId,
-    type:         "followAccepted",
-    fromUserId:   req.user._id,
-    fromUsername: req.user.username,
-    fromPicture:  req.user.profilePicture || "",
-  });
-} catch (e) { console.error("[notif save]", e.message); }
+  } catch (err) { next(err); }
 };
 
 const rejectFollowRequest = async (req, res, next) => {
@@ -284,13 +265,11 @@ const blockUser = async (req, res, next) => {
     res.json({ success: true, blocked: true, message: `${targetUser.username} blocked.` });
   } catch (err) { next(err); }
 };
+
 const getBlockedUsers = async (req, res, next) => {
   try {
-    // ✅ Return BOTH users I blocked AND users who blocked me
     const me = await User.findById(req.user._id).select("blockedUsers").populate("blockedUsers", "username profilePicture");
     const theyBlockedMe = await User.find({ blockedUsers: req.user._id }).select("_id username profilePicture").lean();
-    
-    // Merge both lists, deduplicate by _id
     const myBlocked = me.blockedUsers || [];
     const combined = [...myBlocked];
     for (const u of theyBlockedMe) {
@@ -366,45 +345,17 @@ const deleteAccount = async (req, res, next) => {
     await User.updateMany({}, { $pull: { followers: userId, following: userId, blockedUsers: userId } });
 
     const userDoc = await User.findById(userId).select("profilePicture email");
-
-// ✅ Delete profile picture from Cloudinary
-if (userDoc?.profilePicture && userDoc.profilePicture.includes("cloudinary.com")) {
-  try {
-    const cloudinary = require("cloudinary").v2;
-    const parts    = userDoc.profilePicture.split("/");
-    const file     = parts[parts.length - 1];
-    const folder   = parts[parts.length - 2];
-    const publicId = `${folder}/${file.split(".")[0]}`;
-    await cloudinary.uploader.destroy(publicId, { resource_type: "image" });
-  } catch (e) { console.error("[cloudinary delete avatar]", e.message); }
-} else if (userDoc?.profilePicture && !userDoc.profilePicture.startsWith("http")) {
-  const avatarPath = path.join(__dirname, "..", userDoc.profilePicture.replace(/^\//, ""));
-  if (fs.existsSync(avatarPath)) fs.unlinkSync(avatarPath);
-}
-
-// ✅ Delete all user's posts from Cloudinary
-try {
-  const cloudinary = require("cloudinary").v2;
-  const userPosts  = await Post.find({ userId });
-  for (const post of userPosts) {
-    if (post.mediaUrl && post.mediaUrl.includes("cloudinary.com")) {
-      const parts    = post.mediaUrl.split("/");
-      const file     = parts[parts.length - 1];
-      const folder   = parts[parts.length - 2];
-      const publicId = `${folder}/${file.split(".")[0]}`;
-      const isVideo  = post.mediaType === "video";
-      await cloudinary.uploader.destroy(publicId, { resource_type: isVideo ? "video" : "image" });
+    if (userDoc?.profilePicture && !userDoc.profilePicture.startsWith("http")) {
+      const avatarPath = path.join(__dirname, "..", userDoc.profilePicture.replace(/^\//, ""));
+      if (fs.existsSync(avatarPath)) fs.unlinkSync(avatarPath);
     }
-  }
-} catch (e) { console.error("[cloudinary delete posts]", e.message); }
 
-await Post.deleteMany({ userId });
-await User.findByIdAndDelete(userId);
+    await User.findByIdAndDelete(userId);
     res.json({ success: true, message: "Account permanently deleted." });
   } catch (err) { next(err); }
 };
 
-// ── PUT /api/users/update/:id/notifications ──────────────────────────────────
+// PUT /api/users/update/:id/notifications
 const updateNotifications = async (req, res, next) => {
   try {
     if (req.user._id.toString() !== req.params.id)
@@ -428,7 +379,6 @@ const updateNotifications = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-// Also add follow request accepted socket emit + email
 module.exports = {
   getUserById, updateUser, updateNotifications, followUser, unfollowUser,
   cancelFollowRequest, getFollowRequests, acceptFollowRequest, rejectFollowRequest,
