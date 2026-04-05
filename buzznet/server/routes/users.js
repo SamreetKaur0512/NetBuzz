@@ -1,7 +1,7 @@
 const express = require("express");
 const router  = express.Router();
 const { verifyToken, optionalAuth } = require("../middleware/auth");
-const { uploadToCloud, handleMulterError } = require("../middleware/upload");
+const { upload, handleMulterError } = require("../middleware/upload");
 const {
   getUserById, updateUser, updateNotifications,
   followUser, unfollowUser,
@@ -9,7 +9,6 @@ const {
   blockUser, getBlockedUsers, searchUsers, deleteAccount,
 } = require("../controllers/userController");
 
-// ── Specific GET routes first ─────────────────────────────────────────────────
 router.get("/me", verifyToken, async (req, res) => {
   try {
     const User = require("../models/User");
@@ -22,27 +21,22 @@ router.get("/me", verifyToken, async (req, res) => {
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
-router.get("/search",                              verifyToken,  searchUsers);
-router.get("/blocked",                             verifyToken,  getBlockedUsers);
-router.get("/follow-requests",                     verifyToken,  getFollowRequests);
-router.put("/follow-requests/:requestId/accept",   verifyToken,  acceptFollowRequest);
-router.put("/follow-requests/:requestId/reject",   verifyToken,  rejectFollowRequest);
-router.delete("/delete-account",                   verifyToken,  deleteAccount);
+router.get("/search",          verifyToken, searchUsers);
+router.get("/blocked",         verifyToken, getBlockedUsers);
+router.get("/follow-requests", verifyToken, getFollowRequests);
 
-// ── PUT routes ────────────────────────────────────────────────────────────────
 router.put("/follow-requests/:requestId/accept", verifyToken, acceptFollowRequest);
 router.put("/follow-requests/:requestId/reject", verifyToken, rejectFollowRequest);
 router.put("/update/:id/notifications", verifyToken, updateNotifications);
-router.put("/update/:id",    verifyToken, ...uploadToCloud("profilePicture", "buzznet/avatars"), handleMulterError, updateUser);
+router.put("/update/:id",    verifyToken, upload.single("profilePicture"), handleMulterError, updateUser);
 router.put("/follow/:id",    verifyToken, followUser);
 router.put("/unfollow/:id",  verifyToken, unfollowUser);
 router.put("/block/:id",     verifyToken, blockUser);
 
-// ── DELETE routes ─────────────────────────────────────────────────────────────
-router.delete("/delete-account",     verifyToken, deleteAccount);
-router.delete("/follow/:id/cancel",  verifyToken, cancelFollowRequest);
+router.delete("/delete-account",    verifyToken, deleteAccount);
+router.delete("/follow/:id/cancel", verifyToken, cancelFollowRequest);
 
-// ── Generic /:id LAST ─────────────────────────────────────────────────────────
+// ✅ Generic /:id route MUST be last
 router.get("/:id", optionalAuth, getUserById);
 
 module.exports = router;
