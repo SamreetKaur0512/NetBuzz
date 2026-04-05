@@ -102,22 +102,33 @@ img { display: block; max-width: 100%; }
 ul, ol { list-style: none; }
 
 /* ─── Layout Shell ────────────────────────────────────────────────────────── */
-.app-shell { display: flex; min-height: 100vh; }
-.app-main { flex: 1; margin-left: var(--nav-width); min-height: 100vh; transition: margin-left var(--transition); overflow-x: hidden; overflow-y: auto; }
-@media (max-width: 1024px) { .app-main { margin-left: var(--nav-width-sm); } }
+.app-shell { display: flex; min-height: 100vh; justify-content: center; max-width: 1200px; margin: 0 auto; position: relative; }
+.app-main { 
+  flex: 1; 
+  margin-left: 0; 
+  max-width: 680px; /* Capping the width keeps it close to the sidebar */
+  padding: 20px; 
+  min-height: 100vh; 
+  transition: margin-left var(--transition); 
+  overflow-x: hidden; 
+}
+@media (max-width: 1024px) { .app-main { margin-left: 0; } }
 @media (max-width: 640px) {
 .sidebar {
-  position: fixed; left: -100%; top: 0;
   width: var(--nav-width);
   height: 100vh;
   display: flex;
   flex-direction: column;
   background: var(--grad-sidebar);
   border-right: 2px solid var(--border);
-  z-index: 250;
+  z-index: 100;
   overflow-y: auto;
   overflow-x: hidden;
-  transition: left 0.3s ease-in-out;
+  flex-shrink: 0;
+  
+  /* ADD THESE TWO LINES */
+  position: sticky; 
+  top: 0;
 }
   .sidebar.sidebar-open { left: 0; }
   .app-main { margin-left: 0 !important; padding-bottom: 0 !important; padding-top: 58px; }
@@ -302,7 +313,7 @@ ul, ol { list-style: none; }
 .avatar-placeholder:hover { box-shadow: 0 0 28px rgba(255,215,0,0.35) !important; }
 
 /* ─── Feed ────────────────────────────────────────────────────────────────── */
-.feed-page { max-width: 900px; margin: 0 auto; padding: 28px 24px; }
+.feed-page { max-width: 650px; margin: 0 auto; padding: 28px 10px; }
 
 .post-card {
   background: var(--bg-surface);
