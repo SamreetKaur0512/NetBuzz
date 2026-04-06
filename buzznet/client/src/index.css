@@ -67,7 +67,7 @@
   --font-heading:  'Poppins', sans-serif;
   --font-body:     'Nunito', system-ui, sans-serif;
 
-  --nav-width: 280px;
+  --nav-width: 300px;
   --nav-width-sm:  76px;
   --topbar-h:      60px;
   --transition:    0.2s cubic-bezier(0.4,0,0.2,1);
@@ -108,13 +108,14 @@ ul, ol { list-style: none; }
   min-height: 100vh; 
   width: 100%; 
   position: relative;
+  justify-content: center;
 }
 
 .app-main { 
   flex: 1; 
   display:flex;
   justify-content:center;
-  max-width: 700px; 
+  max-width: 850px; 
   width: 100%; 
   padding: 20px; 
   transition: all var(--transition); 
@@ -343,10 +344,11 @@ ul, ol { list-style: none; }
 .avatar-placeholder:hover { box-shadow: 0 0 28px rgba(255,215,0,0.35) !important; }
 
 /* ─── Feed ────────────────────────────────────────────────────────────────── */
-.feed-page {width: 100%; max-width:850px;margin: 0 auto; padding: 28px 10px; }
+.feed-page {width: 100%; max-width:940px;margin: 0 auto; padding: 28px 10px; }
 
 .post-card {
   background: var(--bg-surface);
+  max-width: 100%;
   border-radius: var(--radius-lg);
   margin-bottom: 28px;
   overflow: visible;
@@ -431,7 +433,7 @@ ul, ol { list-style: none; }
 .post-comment-submit:hover { color: var(--yellow-bright); }
 
 /* ─── Profile ─────────────────────────────────────────────────────────────── */
-.profile-page { max-width: 920px;width:100!; margin: 0 auto; padding: 36px 24px; }
+.profile-page { max-width: 940px;width:100!; margin: 0 auto; padding: 36px 24px; }
 .profile-header {
   display: flex; gap: 52px; align-items: flex-start;
   margin-bottom: 36px; padding: 36px;
