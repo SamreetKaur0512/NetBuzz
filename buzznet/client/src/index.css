@@ -507,7 +507,7 @@ ul, ol { list-style: none; }
 .private-badge { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 72px 24px; color: var(--text-muted); text-align: center; background: var(--bg-surface); border-radius: var(--radius-lg); border: 2px dashed var(--border); }
 
 /* ─── Upload ──────────────────────────────────────────────────────────────── */
-.upload-page { max-width: 580px; margin: 0 auto; padding: 36px 24px; }
+.upload-page { max-width: 100%; margin: 0 auto; padding: 36px 24px; }
 .upload-page h1 { font-family: var(--font-heading); font-size: 30px; font-weight: 900; margin-bottom: 28px; background: var(--grad-hero); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
 .upload-dropzone { border: 2.5px dashed var(--border-light); border-radius: var(--radius-xl); padding: 56px 28px; text-align: center; cursor: pointer; transition: all var(--transition); background: var(--bg-surface); margin-bottom: 24px; }
 .upload-dropzone:hover, .upload-dropzone.drag-over { border-color: var(--yellow); box-shadow: 0 0 32px rgba(255,215,0,0.15); background: rgba(255,215,0,0.03); }
@@ -646,7 +646,13 @@ ul, ol { list-style: none; }
 @keyframes slideInRight { from{opacity:0;transform:translateX(24px);} to{opacity:1;transform:translateX(0);} }
 @keyframes shimmer   { 0%{background-position:-400px 0;} 100%{background-position:400px 0;} }
 @keyframes float     { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
-
+/* ─── Full-width pages ────────────────────────────────────────────────────── */
+.page-full {
+  width: 100%;
+  min-height: 100vh;
+  padding: 28px 32px;
+}
+@media (max-width: 640px) { .page-full { padding: 16px 14px; } }
 /* ─── Responsive ──────────────────────────────────────────────────────────── */
 @media (max-width: 640px) {
   .post-card { margin-bottom: 18px; }

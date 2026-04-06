@@ -27,7 +27,7 @@ export default function NotificationsPage() {
   if (loading) return <LoadingCenter />;
 
   return (
-    <div style={{ maxWidth: 600, margin: '0 auto', padding: '28px 16px' }}>
+    <div style={{ maxWidth: "100%", margin: '0 auto', padding: '28px 16px' }}>
       <div style={{ fontFamily: 'var(--font-heading)', fontSize: 26, fontWeight: 900,
         marginBottom: 24, background: 'var(--grad-hero)',
         WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>

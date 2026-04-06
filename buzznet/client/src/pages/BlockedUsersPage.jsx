@@ -31,7 +31,7 @@ export default function BlockedUsersPage() {
   };
 
   return (
-    <div style={{ maxWidth: 540, margin: '0 auto', padding: '24px 16px' }}>
+    <div style={{ maxWidth:"100%", margin: '0 auto', padding: '24px 16px' }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 28 }}>
         <button
