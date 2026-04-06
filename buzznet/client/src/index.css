@@ -342,7 +342,7 @@ ul, ol { list-style: none; }
 .avatar-placeholder:hover { box-shadow: 0 0 28px rgba(255,215,0,0.35) !important; }
 
 /* ─── Feed ────────────────────────────────────────────────────────────────── */
-.feed-page {width: 100%; max-width:100%;margin: 0 auto; padding: 28px 10px; }
+.feed-page {width: 100%; max-width:100%; padding: 28px 10px; }
 
 .post-card {
   background: var(--bg-surface);
@@ -431,7 +431,7 @@ ul, ol { list-style: none; }
 .post-comment-submit:hover { color: var(--yellow-bright); }
 
 /* ─── Profile ─────────────────────────────────────────────────────────────── */
-.profile-page { max-width: 1000px;width:100%; margin: 0 auto; padding: 36px 24px; }
+.profile-page { max-width: 100%;width:100%; padding: 36px 40px; }
 .profile-header {
   display: flex; gap: 52px; align-items: flex-start;
   margin-bottom: 36px; padding: 36px;
@@ -507,7 +507,7 @@ ul, ol { list-style: none; }
 .private-badge { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 72px 24px; color: var(--text-muted); text-align: center; background: var(--bg-surface); border-radius: var(--radius-lg); border: 2px dashed var(--border); }
 
 /* ─── Upload ──────────────────────────────────────────────────────────────── */
-.upload-page { max-width: 100%; margin: 0 auto; padding: 36px 24px; }
+.upload-page { max-width: 100%;padding: 36px 40px; }
 .upload-page h1 { font-family: var(--font-heading); font-size: 30px; font-weight: 900; margin-bottom: 28px; background: var(--grad-hero); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
 .upload-dropzone { border: 2.5px dashed var(--border-light); border-radius: var(--radius-xl); padding: 56px 28px; text-align: center; cursor: pointer; transition: all var(--transition); background: var(--bg-surface); margin-bottom: 24px; }
 .upload-dropzone:hover, .upload-dropzone.drag-over { border-color: var(--yellow); box-shadow: 0 0 32px rgba(255,215,0,0.15); background: rgba(255,215,0,0.03); }
@@ -544,7 +544,7 @@ ul, ol { list-style: none; }
 .chat-typing { font-size: 12px; color: var(--text-muted); padding: 0 18px 10px; font-style: italic; }
 
 /* ─── Games ───────────────────────────────────────────────────────────────── */
-.game-lobby { max-width: 100%; margin: 0 auto; padding: 36px 24px; }
+.game-lobby { max-width: 100%; padding: 36px 40px; }
 .game-lobby-header { margin-bottom: 36px; }
 .game-lobby-title { font-family: var(--font-heading); font-size: 40px; font-weight: 900; background: var(--grad-hero); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 8px; filter: drop-shadow(0 0 20px rgba(255,215,0,0.25)); }
 .game-type-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 18px; margin-bottom: 36px; }
@@ -564,7 +564,7 @@ ul, ol { list-style: none; }
 .room-players { font-size: 14px; font-weight: 700; color: var(--text-secondary); font-family: var(--font-heading); }
 
 /* ─── Game Room ───────────────────────────────────────────────────────────── */
-.game-room { min-height: 100vh; padding: 28px 24px; max-width: 820px; margin: 0 auto; }
+.game-room { min-height: 100vh; padding: 28px 40px; width: 100%; }
 .game-room-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; padding: 16px 20px; background: var(--bg-surface); border-radius: var(--radius-lg); border: 2px solid var(--border); }
 .game-room-code { font-family: 'Courier New', monospace; font-size: 26px; font-weight: 900; background: var(--grad-hero); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; letter-spacing: 4px; }
 .waiting-room { text-align: center; padding: 44px 0; }
@@ -655,8 +655,9 @@ ul, ol { list-style: none; }
 @media (max-width: 640px) { .page-full { padding: 16px 14px; } }
 /* ─── Responsive ──────────────────────────────────────────────────────────── */
 @media (max-width: 640px) {
-  .post-card { margin-bottom: 18px; }
-  .profile-page { padding: 20px 14px; }
-  .game-lobby { padding: 20px 14px; }
-  .feed-page { padding: 18px 12px; }
+  .upload-page  { padding: 20px 16px; }
+  .game-lobby   { padding: 20px 16px; }
+  .profile-page { padding: 20px 16px; }
+  .game-room    { padding: 20px 16px; }
+  .feed-page    { padding: 16px 12px; }
 }

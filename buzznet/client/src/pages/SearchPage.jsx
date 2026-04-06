@@ -30,7 +30,7 @@ export default function SearchPage() {
   }, [query]);
 
   return (
-    <div style={{ maxWidth: '100%', margin: '0 auto', padding: '24px 16px' }}>
+  <div style={{ width: '100%', padding: '24px 40px' }}>
       {/* Search bar */}
       <div style={{
         display: 'flex', alignItems: 'center', gap: 10,
