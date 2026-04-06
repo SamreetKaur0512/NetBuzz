@@ -145,14 +145,18 @@ ul, ol { list-style: none; }
 /* Mobile: Drawer style */
 @media (max-width: 640px) {
   .sidebar {
-    top:0;
-    left:0;
-    position: fixed;
-    transform: translateX(-100%); /* Default band */
-    width: 260px;
+    top:0 !important;
+    left:0 !important;
+    position: fixed !important;
+    transform: translateX(-100%) !important; /* Default band */
+    width: 280px !important;
+    height:100vh !important;
+    transition:transform var(--transition) !important;
   }
   .sidebar.sidebar-open {
-    transform: translateX(0); /* Jab open ho */
+    transform: translateX(0) !important; /* Jab open ho */
+    padding-top:70px !important;
+    margin-left:0 !important;
     box-shadow: 10px 0 30px rgba(0,0,0,0.2);
   }
   .app-main {
