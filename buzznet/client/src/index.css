@@ -67,7 +67,7 @@
   --font-heading:  'Poppins', sans-serif;
   --font-body:     'Nunito', system-ui, sans-serif;
 
-  --nav-width: 220px;
+  --nav-width: 280px;
   --nav-width-sm:  76px;
   --topbar-h:      60px;
   --transition:    0.2s cubic-bezier(0.4,0,0.2,1);
@@ -160,9 +160,14 @@ ul, ol { list-style: none; }
     box-shadow: 10px 0 30px rgba(0,0,0,0.2);
   }
   .app-main {
+    flex:1;
+    display:flex;
+    justify-content:center;
+    padding:20px;
     padding-left:10px;
     padding-right:10px;
-    max-width: 100%;
+    max-width: 1000px;
+    width:100%;
     padding-top: 70px;
     margin-left: 0 !important;
   }
@@ -338,7 +343,7 @@ ul, ol { list-style: none; }
 .avatar-placeholder:hover { box-shadow: 0 0 28px rgba(255,215,0,0.35) !important; }
 
 /* ─── Feed ────────────────────────────────────────────────────────────────── */
-.feed-page {width: 100%; max-width:650px;margin: 0 auto; padding: 28px 10px; }
+.feed-page {width: 100%; max-width:850px;margin: 0 auto; padding: 28px 10px; }
 
 .post-card {
   background: var(--bg-surface);
@@ -426,7 +431,7 @@ ul, ol { list-style: none; }
 .post-comment-submit:hover { color: var(--yellow-bright); }
 
 /* ─── Profile ─────────────────────────────────────────────────────────────── */
-.profile-page { max-width: 920px; margin: 0 auto; padding: 36px 24px; }
+.profile-page { max-width: 920px;width:100!; margin: 0 auto; padding: 36px 24px; }
 .profile-header {
   display: flex; gap: 52px; align-items: flex-start;
   margin-bottom: 36px; padding: 36px;
