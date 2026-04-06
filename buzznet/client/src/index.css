@@ -106,13 +106,14 @@ ul, ol { list-style: none; }
 .app-shell { 
   display: flex; 
   min-height: 100vh; 
-  justify-content: center; 
   width: 100%; 
   position: relative;
 }
 
 .app-main { 
   flex: 1; 
+  display:flex;
+  justify-content:center;
   max-width: 700px; 
   width: 100%; 
   padding: 20px; 
@@ -124,12 +125,14 @@ ul, ol { list-style: none; }
   height: 100vh;
   position: sticky; /* Desktop pe sidebar fix rahega */
   top: 0;
+  left:0;
   background: var(--grad-sidebar);
   border-right: 2px solid var(--border);
   display: flex;
   flex-direction: column;
   z-index: 200;
   transition: transform var(--transition), width var(--transition);
+  flex-shrink:0;
 }
 
 /* Tablet: Icons only */
@@ -142,9 +145,9 @@ ul, ol { list-style: none; }
 /* Mobile: Drawer style */
 @media (max-width: 640px) {
   .sidebar {
+    top:0;
+    left:0;
     position: fixed;
-    left: 0;
-    top: 0;
     transform: translateX(-100%); /* Default band */
     width: 260px;
   }
@@ -153,6 +156,8 @@ ul, ol { list-style: none; }
     box-shadow: 10px 0 30px rgba(0,0,0,0.2);
   }
   .app-main {
+    padding-left:10px;
+    padding-right:10px;
     max-width: 100%;
     padding-top: 70px;
     margin-left: 0 !important;
@@ -329,7 +334,7 @@ ul, ol { list-style: none; }
 .avatar-placeholder:hover { box-shadow: 0 0 28px rgba(255,215,0,0.35) !important; }
 
 /* ─── Feed ────────────────────────────────────────────────────────────────── */
-.feed-page { max-width: 650px; margin: 0 auto; padding: 28px 10px; }
+.feed-page {width: 100%; max-width:650px;margin: 0 auto; padding: 28px 10px; }
 
 .post-card {
   background: var(--bg-surface);
