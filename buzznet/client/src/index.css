@@ -344,7 +344,7 @@ ul, ol { list-style: none; }
 .avatar-placeholder:hover { box-shadow: 0 0 28px rgba(255,215,0,0.35) !important; }
 
 /* ─── Feed ────────────────────────────────────────────────────────────────── */
-.feed-page {width: 100%; max-width:1000px;margin: 0 auto; padding: 28px 10px; }
+.feed-page {width: 100%; max-width:100%;margin: 0 auto; padding: 28px 10px; }
 
 .post-card {
   background: var(--bg-surface);
@@ -433,7 +433,7 @@ ul, ol { list-style: none; }
 .post-comment-submit:hover { color: var(--yellow-bright); }
 
 /* ─── Profile ─────────────────────────────────────────────────────────────── */
-.profile-page { max-width: 1000px;width:100!; margin: 0 auto; padding: 36px 24px; }
+.profile-page { max-width: 1000px;width:100%; margin: 0 auto; padding: 36px 24px; }
 .profile-header {
   display: flex; gap: 52px; align-items: flex-start;
   margin-bottom: 36px; padding: 36px;
@@ -546,7 +546,7 @@ ul, ol { list-style: none; }
 .chat-typing { font-size: 12px; color: var(--text-muted); padding: 0 18px 10px; font-style: italic; }
 
 /* ─── Games ───────────────────────────────────────────────────────────────── */
-.game-lobby { max-width: 1000px; margin: 0 auto; padding: 36px 24px; }
+.game-lobby { max-width: 100%; margin: 0 auto; padding: 36px 24px; }
 .game-lobby-header { margin-bottom: 36px; }
 .game-lobby-title { font-family: var(--font-heading); font-size: 40px; font-weight: 900; background: var(--grad-hero); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 8px; filter: drop-shadow(0 0 20px rgba(255,215,0,0.25)); }
 .game-type-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 18px; margin-bottom: 36px; }
