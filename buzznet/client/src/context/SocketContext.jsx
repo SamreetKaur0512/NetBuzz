@@ -11,12 +11,10 @@ export function SocketProvider({ children }) {
   const [gameSocket, setGameSocket]       = useState(null);
   const [chatConnected, setChatConnected] = useState(false);
   const [gameConnected, setGameConnected] = useState(false);
+  const [notifQueue,   setNotifQueue]     = useState([]);
+  const [activeNotif,  setActiveNotif]    = useState(null);
 
-  // ── Global notification queue ─────────────────────────────────────────────
-  const [notifQueue, setNotifQueue] = useState([]);
-  const [activeNotif, setActiveNotif] = useState(null);
-
-  // Show next notif from queue
+  // Show next notif from queue when current is dismissed
   useEffect(() => {
     if (!activeNotif && notifQueue.length > 0) {
       setActiveNotif(notifQueue[0]);
@@ -28,15 +26,20 @@ export function SocketProvider({ children }) {
     setNotifQueue(prev => [...prev, notif]);
   }, []);
 
- const dismissNotif = useCallback((notifId) => {
-  // Mark as read in DB so it shows as read in notifications page
-  if (notifId) {
-    import('../services/api').then(m => {
-      m.notificationAPI?.markRead(notifId).catch(() => {});
-    });
-  }
-  setActiveNotif(null);
-}, []);
+  const dismissNotif = useCallback((notifId) => {
+    // Mark as read in DB so notifications page shows it as read
+    if (notifId) {
+      fetch(`${SERVER}/api/notifications/${notifId}/read`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json',
+        },
+      }).catch(() => {});
+    }
+    setActiveNotif(null);
+  }, []);
+
   useEffect(() => {
     if (!token) {
       setChatSocket(s => { s?.disconnect(); return null; });
@@ -54,15 +57,15 @@ export function SocketProvider({ children }) {
     chat.on('connect',    () => setChatConnected(true));
     chat.on('disconnect', () => setChatConnected(false));
 
-    // ✅ Global socket notifications — work on ALL pages
-    chat.on('followRequestAccepted', ({ by }) => {
-      pushNotif({ type: 'followAccepted', username: by.username, picture: by.profilePicture });
+    // ✅ Global notifications — work on ALL pages
+    chat.on('followRequestAccepted', ({ by, notifId }) => {
+      pushNotif({ type: 'followAccepted', username: by.username, picture: by.profilePicture, notifId });
     });
-    chat.on('newFollower', ({ by }) => {
-      pushNotif({ type: 'newFollower', username: by.username, picture: by.profilePicture });
+    chat.on('newFollower', ({ by, notifId }) => {
+      pushNotif({ type: 'newFollower', username: by.username, picture: by.profilePicture, notifId });
     });
-    chat.on('chatRequestAccepted', ({ by }) => {
-      pushNotif({ type: 'messageAccepted', username: by.username, picture: by.profilePicture });
+    chat.on('chatRequestAccepted', ({ by, notifId }) => {
+      pushNotif({ type: 'messageAccepted', username: by.username, picture: by.profilePicture, notifId });
     });
 
     setChatSocket(chat);
@@ -85,43 +88,64 @@ export function SocketProvider({ children }) {
   return (
     <SocketContext.Provider value={{
       chatSocket, gameSocket, chatConnected, gameConnected,
-      activeNotif, dismissNotif,
+      activeNotif, dismissNotif, notifQueue,
     }}>
       {children}
 
-      {/* ── Global Notification Modal — shows on ANY page ── */}
+      {/* ── Global Notification Modal ── */}
       {activeNotif && (
-        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.55)',
-          zIndex:99999, display:'flex', alignItems:'center', justifyContent:'center',
-          padding:'24px', animation:'fadeIn 0.2s ease' }}>
-          <div style={{ background:'var(--bg-card,#fff)', borderRadius:20,
-            padding:'32px 28px', maxWidth:340, width:'100%', textAlign:'center',
-            boxShadow:'0 8px 40px rgba(0,0,0,0.3)', animation:'scaleIn 0.25s cubic-bezier(0.34,1.56,0.64,1)' }}>
-            <div style={{ fontSize:48, marginBottom:12 }}>
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)',
+          zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: '24px',
+        }}>
+          <div style={{
+            background: 'var(--bg-card, #fff)', borderRadius: 20,
+            padding: '32px 28px', maxWidth: 340, width: '100%', textAlign: 'center',
+            boxShadow: '0 8px 40px rgba(0,0,0,0.3)',
+            position: 'relative',
+          }}>
+            {/* ✅ X button to dismiss */}
+            <button
+              onClick={() => dismissNotif(activeNotif.notifId)}
+              style={{
+                position: 'absolute', top: 12, right: 14,
+                background: 'none', border: 'none', cursor: 'pointer',
+                fontSize: 20, color: 'var(--text-muted)', lineHeight: 1,
+                fontWeight: 700,
+              }}>✕</button>
+
+            <div style={{ fontSize: 48, marginBottom: 12 }}>
               {activeNotif.type === 'newFollower' ? '👤' : '🎉'}
             </div>
-            <div style={{ fontSize:18, fontWeight:800, marginBottom:8,
-              fontFamily:'var(--font-heading)', color:'var(--text-primary)' }}>
-              {activeNotif.type === 'followAccepted' && 'Follow Request Accepted!'}
-              {activeNotif.type === 'newFollower'    && 'New Follower!'}
+            <div style={{
+              fontSize: 18, fontWeight: 800, marginBottom: 8,
+              fontFamily: 'var(--font-heading)', color: 'var(--text-primary)',
+            }}>
+              {activeNotif.type === 'followAccepted'  && 'Follow Request Accepted!'}
+              {activeNotif.type === 'newFollower'     && 'New Follower!'}
               {activeNotif.type === 'messageAccepted' && 'Message Request Accepted!'}
             </div>
-            <div style={{ fontSize:15, color:'var(--text-secondary)', marginBottom:24, lineHeight:1.6 }}>
+            <div style={{
+              fontSize: 15, color: 'var(--text-secondary)',
+              marginBottom: 24, lineHeight: 1.6,
+            }}>
               <strong>{activeNotif.username}</strong>{' '}
               {activeNotif.type === 'followAccepted'  && 'accepted your follow request. You can now see their posts!'}
               {activeNotif.type === 'newFollower'     && 'started following you!'}
               {activeNotif.type === 'messageAccepted' && 'accepted your message request. You can now chat!'}
             </div>
-            {/* Show queue count if more waiting */}
             {notifQueue.length > 0 && (
-              <div style={{ fontSize:12, color:'var(--text-muted)', marginBottom:12 }}>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12 }}>
                 +{notifQueue.length} more notification{notifQueue.length > 1 ? 's' : ''}
               </div>
             )}
-            <button className="btn btn-primary"
-              style={{ padding:'10px 36px', fontSize:15, fontWeight:700 }}
-              onClick={dismissNotif}>OK</button>
-              onClick={() => dismissNotif(activeNotif._id)}
+            <button
+              className="btn btn-primary"
+              style={{ padding: '10px 36px', fontSize: 15, fontWeight: 700 }}
+              onClick={() => dismissNotif(activeNotif.notifId)}>
+              OK
+            </button>
           </div>
         </div>
       )}
@@ -129,6 +153,8 @@ export function SocketProvider({ children }) {
   );
 }
 
-export function useSocket() {
-  return useContext(SocketContext);
-}
+export const useSocket = () => {
+  const ctx = useContext(SocketContext);
+  if (!ctx) throw new Error('useSocket must be inside SocketProvider');
+  return ctx;
+};

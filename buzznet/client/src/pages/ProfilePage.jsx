@@ -268,7 +268,7 @@ export default function ProfilePage() {
                   style={{ background: 'rgba(231,76,60,0.10)', color: '#e74c3c',
                     border: '1.5px solid rgba(231,76,60,0.3)', borderRadius: 8,
                     padding: '6px 12px', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
-                  🗑️ Delete Account
+                   Delete Account
                 </button>
 
                 {profile.isPrivate && (
@@ -524,7 +524,7 @@ export default function ProfilePage() {
                 background: deleteConfirm.toUpperCase() === 'DELETE' && !deleting ? '#e74c3c' : 'rgba(231,76,60,0.3)',
                 color: '#fff', fontSize: 14, fontWeight: 700,
                 cursor: deleteConfirm.toUpperCase() === 'DELETE' && !deleting ? 'pointer' : 'not-allowed' }}>
-              {deleting ? 'Deleting…' : '🗑️ Delete My Account'}
+              {deleting ? 'Deleting…' : 'Delete My Account'}
             </button>
           </div>
         </Modal>

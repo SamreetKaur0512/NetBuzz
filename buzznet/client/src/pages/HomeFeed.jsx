@@ -95,10 +95,12 @@ export default function HomeFeed() {
     <div className="feed-page">
       {/* ── Tab bar ── */}
       <div style={{
-        display: 'flex', borderBottom: '1px solid var(--border)',
-        marginBottom: 20, position: 'sticky', top: 0,
-        background: 'var(--bg)', zIndex: 10,
-      }}>
+  display: 'flex', borderBottom: '2px solid var(--border)',
+  marginBottom: 20, position: 'sticky', top: 0,
+  background: 'var(--bg-base)', zIndex: 50,
+  backdropFilter: 'blur(8px)',
+  WebkitBackdropFilter: 'blur(8px)',
+}}>
         {[
           { key: 'explore',   label: 'Explore' },
           { key: 'following', label: 'Posts of people you follow' },

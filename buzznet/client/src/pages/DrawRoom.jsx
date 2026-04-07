@@ -587,7 +587,7 @@ export default function DrawRoom({ room, roomCode, players: initPlayers, gameSoc
               ))}
             </div>
             <button onClick={handleClear} className="btn btn-ghost btn-sm" style={{ marginLeft: 'auto' }}>
-              🗑️ Clear
+              Clear
             </button>
           </div>
         )}

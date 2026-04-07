@@ -132,6 +132,7 @@ ul, ol { list-style: none; }
   z-index: 200;
   transition: transform var(--transition), width var(--transition);
   flex-shrink:0;
+  overflow-y: auto;
 }
 
 /* Tablet: Icons only */
