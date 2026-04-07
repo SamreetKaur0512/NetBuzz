@@ -138,15 +138,14 @@ ul, ol { list-style: none; }
 }
 .nav-label p{
   display:block !important;
-  font-size:10.5px !important;
+  font-size:-2px !important;
   color:dodgerblue !important;
   margin :2px 0 0 0 0 !important;
   white-space:normal !important;
-  line-height:1.1 !important;
-  margin-top:2px !important;
+  line-height:1 !important;
+  margin-top:-2px !important;
   width :100% !important;
   opacity: 0.9;
-  margin-top:0 !important;
 }
 
 /* Chrome/Safari scrollbar styling */
@@ -254,17 +253,17 @@ ul, ol { list-style: none; }
   .sidebar-logo::before { content: 'B'; font-size: 26px; font-family: var(--font-display); font-style: italic; font-weight: 700; background: var(--grad-yellow); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; filter: drop-shadow(0 0 8px rgba(255,215,0,0.5)); }
 }
 
-.nav-items { display: flex; flex-direction: column; gap: 5px !important;height :auto; overflow:visible !important ;padding-bottom:20px !important;scrollbar-color: rgba(255,215,0,0.3) transparent; }
+.nav-items { display: flex;padding:10px 12px; flex-direction: column; gap: 2px !important;height :auto; overflow:hidden ;padding-bottom:20px !important;scrollbar-color: rgba(255,215,0,0.3) transparent; }
 .nav-item {
   white-space:nowrap !important;
   width:100%;
   min-height: 48px;
   height:auto;
   display: flex; align-items: center; gap: 14px;
-  padding: 10px 15px !important; border-radius:12px;
+  padding: 8px 12px !important; border-radius:12px;
   color: #5a6180; font-size: 14px; font-weight: 600;
   font-family: var(--font-heading);
-  margin:2px 0;
+  margin: 0 !important;
   align-items:flex-start;
   overflow:visible;
   transition: all var(--transition); cursor: pointer; white-space: nowrap;
@@ -291,7 +290,7 @@ ul, ol { list-style: none; }
 
 
 .sidebar-user {
-  padding: 18px !important; 
+  padding: 8px !important; 
   border-top: 1px solid var(--border);
   display: flex; 
   align-items: center; 
@@ -300,11 +299,11 @@ ul, ol { list-style: none; }
   border-radius: var(--radius-md);
   flex-shrink: 0;
   padding:10px;
-  border-top:1px soliid var(--border);
+  border-top:1px solid var(--border);
   
   /* --- CHANGES YAHAN HAIN --- */
   position: static !important;   /* Relative/Fixed hata kar Static kiya */
-  margin-top: 15px !important;             /* Auto ki jagah fix margin taaki upar wale items ke niche rahe */
+  margin-top: 10px !important;             /* Auto ki jagah fix margin taaki upar wale items ke niche rahe */
   margin-bottom: 10px;          /* Zyada bada margin yahan se hata dein */
   
   transition: background var(--transition);
