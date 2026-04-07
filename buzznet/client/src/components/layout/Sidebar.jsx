@@ -39,7 +39,6 @@ export default function Sidebar() {
     return () => clearInterval(t);
   }, [user]);
 
-  // Increment badge when new notification arrives
   useEffect(() => {
     if (activeNotif) setUnreadNotifs(p => p + 1);
   }, [activeNotif]);
@@ -57,7 +56,10 @@ export default function Sidebar() {
       <nav className={`sidebar ${menuOpen ? 'sidebar-open' : ''}`}>
         <div className="sidebar-logo">BuzzNet.</div>
 
-        <div className="nav-items">
+        {/* --- Sab kuch ab is NAV-ITEMS div ke andar hai --- */}
+        <div className="nav-items" style={{ display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'auto' }}>
+          
+          {/* Main Navigation Links */}
           {NAV.map(({ to, icon: Icon, label }) => (
             <NavLink key={to} to={to} end={to === '/'}
               className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
@@ -80,6 +82,7 @@ export default function Sidebar() {
             </NavLink>
           ))}
 
+          {/* Profile Link */}
           {user && (
             <NavLink to={`/profile/${user._id}`}
               className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
@@ -89,6 +92,7 @@ export default function Sidebar() {
             </NavLink>
           )}
 
+          {/* Follow Requests Link */}
           {user && (
             <NavLink to="/follow-requests"
               className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
@@ -116,24 +120,32 @@ export default function Sidebar() {
               </span>
             </NavLink>
           )}
-        </div>
 
-        {user && (
-          <div className="sidebar-user"
-            onClick={() => { navigate(`/profile/${user._id}`); handleNavClick(); }}>
-            <Avatar src={user.profilePicture} username={user.username} size={36} />
-            <div className="sidebar-user-info">
-              <div className="sidebar-user-name">{user.username}</div>
-              <div className="sidebar-user-handle">@{user.userId || user.username}</div>
+          {/* User Info Section (Now Inside Scroll) */}
+          {user && (
+            <div className="sidebar-user" 
+              style={{ marginTop: '20px', cursor: 'pointer' }}
+              onClick={() => { navigate(`/profile/${user._id}`); handleNavClick(); }}>
+              <Avatar src={user.profilePicture} username={user.username} size={36} />
+              <div className="sidebar-user-info">
+                <div className="sidebar-user-name" style={{ fontWeight: 'bold' }}>{user.username}</div>
+                <div className="sidebar-user-handle">@{user.userId || user.username}</div>
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        <button className="nav-item" style={{ margin: '0 10px 8px' }}
-          onClick={() => { logout(); handleNavClick(); }} title="Log out">
-          <Icons.Logout />
-          <span className="nav-label">Log out</span>
-        </button>
+          {/* Logout Button (Now Inside Scroll) */}
+          <button className="nav-item" 
+            style={{ margin: '10px 0', border: 'none', background: 'none', textAlign: 'left', cursor: 'pointer' }}
+            onClick={() => { logout(); handleNavClick(); }} title="Log out">
+            <Icons.Logout />
+            <span className="nav-label">Log out</span>
+          </button>
+
+          {/* Extra Space at Bottom (Taaki laptop bar cover na kare) */}
+          <div style={{ height: '80px', flexShrink: 0 }}></div>
+
+        </div> {/* --- NAV-ITEMS yahan band ho raha hai --- */}
       </nav>
     </>
   );

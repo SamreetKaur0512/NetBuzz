@@ -243,7 +243,7 @@ ul, ol { list-style: none; }
   .sidebar-logo::before { content: 'B'; font-size: 26px; font-family: var(--font-display); font-style: italic; font-weight: 700; background: var(--grad-yellow); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; filter: drop-shadow(0 0 8px rgba(255,215,0,0.5)); }
 }
 
-.nav-items { display: flex; flex-direction: column; gap: 4px; padding: 10px 12px; overflow-y:visible !important;scrollbar-color: rgba(255,215,0,0.3) transparent; }
+.nav-items { display: flex; flex-direction: column; gap: 4px; padding: 10px 12px; overflow-y:auto;padding-bottom:120;scrollbar-color: rgba(255,215,0,0.3) transparent; }
 .nav-item {
   display: flex; align-items: center; gap: 14px;
   padding: 12px 14px; border-radius: var(--radius-md);
@@ -262,15 +262,35 @@ ul, ol { list-style: none; }
 @keyframes pulse-badge { 0%,100%{box-shadow:0 0 8px rgba(255,71,87,0.5)} 50%{box-shadow:0 0 16px rgba(255,71,87,0.8)} }
 @media (min-width: 641px) and (max-width: 1024px) { .nav-badge { right: 4px; top: 4px; width: 14px; height: 14px; font-size: 8px; } }
 
+
 .sidebar-user {
-  padding: 15px; border-top: 1px solid var(--border);
-  display: flex; align-items: center; gap: 10px;
-  cursor: pointer; border-radius: var(--radius-md);
-  flex-shrink:0;
-  margin-top:20px;
-  margin-bottom:100px;
+  padding: 15px; 
+  border-top: 1px solid var(--border);
+  display: flex; 
+  align-items: center; 
+  gap: 10px;
+  cursor: pointer; 
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+  
+  /* --- CHANGES YAHAN HAIN --- */
+  position: static !important;   /* Relative/Fixed hata kar Static kiya */
+  margin-top: 20px;             /* Auto ki jagah fix margin taaki upar wale items ke niche rahe */
+  margin-bottom: 10px;          /* Zyada bada margin yahan se hata dein */
+  
   transition: background var(--transition);
-  background: #f4f6fb; border: 1.5px solid var(--border);
+  background: #f4f6fb; 
+  border: 1.5px solid var(--border);
+}
+
+/* Logout button ke liye alag se ye add karein */
+.nav-item[title="Log out"] {
+  position: static !important;
+  margin-top: 10px;
+  margin-bottom: 100px !important; /* Sirf aakhri item (Logout) ke niche space dein */
+  display: flex !important;
+  align-items: center;
+  gap: 14px;
 }
 .sidebar-user:hover { border-color: var(--yellow); background: rgba(255,215,0,0.07); }
 @media (min-width: 641px) and (max-width: 1024px) { .sidebar-user { justify-content: center; margin: 8px 6px 4px; } }
