@@ -138,14 +138,15 @@ ul, ol { list-style: none; }
 }
 .nav-label p{
   display:block !important;
-  font-size:11px !important;
+  font-size:10.5px !important;
   color:dodgerblue !important;
   margin :2px 0 0 0 0 !important;
   white-space:normal !important;
-  line-height:1.2;
+  line-height:1.1 !important;
   margin-top:2px !important;
   width :100% !important;
   opacity: 0.9;
+  margin-top:0 !important;
 }
 
 /* Chrome/Safari scrollbar styling */
@@ -253,7 +254,7 @@ ul, ol { list-style: none; }
   .sidebar-logo::before { content: 'B'; font-size: 26px; font-family: var(--font-display); font-style: italic; font-weight: 700; background: var(--grad-yellow); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; filter: drop-shadow(0 0 8px rgba(255,215,0,0.5)); }
 }
 
-.nav-items { display: flex; flex-direction: column; gap: 8px !important;height :auto; overflow:visible !important ;padding-bottom:20px !important;scrollbar-color: rgba(255,215,0,0.3) transparent; }
+.nav-items { display: flex; flex-direction: column; gap: 5px !important;height :auto; overflow:visible !important ;padding-bottom:20px !important;scrollbar-color: rgba(255,215,0,0.3) transparent; }
 .nav-item {
   white-space:nowrap !important;
   width:100%;
@@ -298,10 +299,12 @@ ul, ol { list-style: none; }
   cursor: pointer; 
   border-radius: var(--radius-md);
   flex-shrink: 0;
+  padding:10px;
+  border-top:1px soliid var(--border);
   
   /* --- CHANGES YAHAN HAIN --- */
   position: static !important;   /* Relative/Fixed hata kar Static kiya */
-  margin-top: 30px !important;             /* Auto ki jagah fix margin taaki upar wale items ke niche rahe */
+  margin-top: 15px !important;             /* Auto ki jagah fix margin taaki upar wale items ke niche rahe */
   margin-bottom: 10px;          /* Zyada bada margin yahan se hata dein */
   
   transition: background var(--transition);
@@ -312,8 +315,8 @@ ul, ol { list-style: none; }
 /* Logout button ke liye alag se ye add karein */
 .nav-item[title="Log out"] {
   position: static !important;
-  margin-top: 10px;
-  margin-bottom: 100px !important; /* Sirf aakhri item (Logout) ke niche space dein */
+  margin-top: 5px !important; ;
+  margin-bottom: 10px !important; /* Sirf aakhri item (Logout) ke niche space dein */
   display: flex !important;
   align-items: center;
   gap: 14px;
