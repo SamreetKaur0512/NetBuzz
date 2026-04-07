@@ -253,7 +253,7 @@ ul, ol { list-style: none; }
   .sidebar-logo::before { content: 'B'; font-size: 26px; font-family: var(--font-display); font-style: italic; font-weight: 700; background: var(--grad-yellow); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; filter: drop-shadow(0 0 8px rgba(255,215,0,0.5)); }
 }
 
-.nav-items { display: flex; flex-direction: column; gap: 12px !important;height :auto; overflow:visible !important ;padding-bottom:20px !important;scrollbar-color: rgba(255,215,0,0.3) transparent; }
+.nav-items { display: flex; flex-direction: column; gap: 8px !important;height :auto; overflow:visible !important ;padding-bottom:20px !important;scrollbar-color: rgba(255,215,0,0.3) transparent; }
 .nav-item {
   white-space:nowrap !important;
   width:100%;
