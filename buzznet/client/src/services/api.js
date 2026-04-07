@@ -113,8 +113,9 @@ export const gameAPI = {
 };
 // ── Notifications ─────────────────────────────────────────────────────────────
 export const notificationAPI = {
-  getAll:      () =>  api.get('/api/notifications'),
-  markRead:    (id) => api.put(`/api/notifications/${id}/read`),
-  markAllRead: () =>  api.put('/api/notifications/read-all'),
+  getAll:      () =>    api.get('/api/notifications'),
+  markRead:    (id) =>  api.put(`/api/notifications/${id}/read`),
+  markAllRead: () =>    api.put('/api/notifications/read-all'),
+  deleteOne:   (id) =>  api.delete(`/api/notifications/${id}`),
 };
 export default api;

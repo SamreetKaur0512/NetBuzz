@@ -24,6 +24,13 @@ router.put("/:id/read", verifyToken, async (req, res) => {
     res.json({ success: true });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
+// DELETE one notification
+router.delete("/:id", verifyToken, async (req, res) => {
+  try {
+    await Notification.findOneAndDelete({ _id: req.params.id, userId: req.user._id });
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+});
 
 // PUT mark ALL as read
 router.put("/read-all", verifyToken, async (req, res) => {

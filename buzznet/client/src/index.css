@@ -120,19 +120,17 @@ ul, ol { list-style: none; }
 }
 
 .sidebar {
-  width: var(--nav-width);
-  height: 100vh;
-  position: sticky; /* Desktop pe sidebar fix rahega */
-  top: 0;
-  left:0;
+  position: fixed; left: 0; top: 0;
+  width: var(--nav-width); height: 100vh;
   background: var(--grad-sidebar);
   border-right: 2px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  z-index: 200;
-  transition: transform var(--transition), width var(--transition);
-  flex-shrink:0;
+  display: flex; flex-direction: column;
+  padding: 0 0 16px;
+  z-index: 100;
+  transition: width var(--transition);
   overflow-y: auto;
+  overflow-x: hidden;
+  box-shadow: 4px 0 20px rgba(30,35,64,0.08);
 }
 
 /* Tablet: Icons only */
