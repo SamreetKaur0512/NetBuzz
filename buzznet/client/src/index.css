@@ -135,9 +135,10 @@ ul, ol { list-style: none; }
   z-index: 1000;
 
   /* ─── SCROLL FIX ─── */
-  overflow-y: auto; 
+  overflow-y: auto !important; 
   overflow-x: hidden;
-  scrollbar-width: thin; /* Firefox */
+  scrollbar-width: thin;
+ /* Firefox */
 }
 
 /* Chrome/Safari scrollbar styling */
@@ -154,7 +155,14 @@ ul, ol { list-style: none; }
   .sidebar-logo, .nav-item span, .sidebar-user-info { display: none; }
   .nav-item { justify-content: center; }
 }
-
+@media (min-width: 641px) {
+  .app-main {
+    flex: 1;
+    width: calc(100% - var(--nav-width)) !important; 
+    margin-left: 0; 
+    align-items: stretch !important; /* Content ko poori width mein khinchega */
+  }
+}
 /* Mobile: Drawer style */
 @media (max-width: 640px) {
   .sidebar {
@@ -164,7 +172,9 @@ ul, ol { list-style: none; }
     transform: translateX(-100%) !important; /* Default band */
     width: 280px !important;
     height:100vh !important;
-    transition:transform 0.3s ease !important;
+    transition: translateX(0) !important;
+    overflow-y:auto !important;
+    z-index:2000 !important;
   }
   .sidebar.sidebar-open {
     transform: translateX(0) !important; /* Jab open ho */
@@ -180,8 +190,8 @@ ul, ol { list-style: none; }
     padding-left:10px;
     padding-right:10px;
     max-width: 1000px;
-    width:100%;
-    padding-top: 70px;
+    width:100% !important;
+    padding-top: 70px 10px 20px 10px !important;
     margin-left: 0 !important;
   }
   .hamburger-btn { display: flex !important; } /* Mobile pe button dikhega */
@@ -235,7 +245,7 @@ ul, ol { list-style: none; }
   .sidebar-logo::before { content: 'B'; font-size: 26px; font-family: var(--font-display); font-style: italic; font-weight: 700; background: var(--grad-yellow); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; filter: drop-shadow(0 0 8px rgba(255,215,0,0.5)); }
 }
 
-.nav-items { flex: 1; display: flex; flex-direction: column; gap: 4px; padding: 0 12px; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; scrollbar-color: rgba(255,215,0,0.3) transparent; }
+.nav-items { flex: 1 1 auto; display: flex; flex-direction: column; gap: 4px; padding: 0 12px 20px 12px; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; scrollbar-color: rgba(255,215,0,0.3) transparent; }
 .nav-item {
   display: flex; align-items: center; gap: 14px;
   padding: 12px 14px; border-radius: var(--radius-md);
