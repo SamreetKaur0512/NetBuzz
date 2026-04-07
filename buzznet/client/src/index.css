@@ -243,7 +243,7 @@ ul, ol { list-style: none; }
   .sidebar-logo::before { content: 'B'; font-size: 26px; font-family: var(--font-display); font-style: italic; font-weight: 700; background: var(--grad-yellow); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; filter: drop-shadow(0 0 8px rgba(255,215,0,0.5)); }
 }
 
-.nav-items { display: flex; flex-direction: column; gap: 4px; padding: 0 12px; overflow:visible; scrollbar-width: thin; scrollbar-color: rgba(255,215,0,0.3) transparent; }
+.nav-items { display: flex; flex-direction: column; gap: 4px; padding: 0 12px; padding-bottom:100px !important; overflow:visible; scrollbar-width: thin; scrollbar-color: rgba(255,215,0,0.3) transparent; }
 .nav-item {
   display: flex; align-items: center; gap: 14px;
   padding: 12px 14px; border-radius: var(--radius-md);
@@ -268,7 +268,7 @@ ul, ol { list-style: none; }
   cursor: pointer; border-radius: var(--radius-md);
   flex-shrink:0;
   margin-top:20;
-  margin-bottom:20px;
+  margin-bottom:40px !important;
   transition: background var(--transition);
   background: #f4f6fb; border: 1.5px solid var(--border);
 }
