@@ -133,11 +133,7 @@ ul, ol { list-style: none; }
   background: var(--grad-sidebar);
   border-right: 2px solid var(--border);
   z-index: 1000;
-
-  /* ─── SCROLL FIX ─── */
-  overflow-y: auto !important; 
-  overflow-x: hidden;
-  scrollbar-width: thin;
+  overflow:hidden;
  /* Firefox */
 }
 
@@ -175,6 +171,7 @@ ul, ol { list-style: none; }
     transition: translateX(0) !important;
     overflow-y:auto !important;
     z-index:2000 !important;
+    padding-top:60px !important;
   }
   .sidebar.sidebar-open {
     transform: translateX(0) !important; /* Jab open ho */
@@ -201,15 +198,15 @@ ul, ol { list-style: none; }
 .hamburger-btn { display: none; }
 @media (max-width: 640px) {
   .hamburger-btn {
-    display: flex;
+    display: flex !important;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     gap: 5px;
     position: fixed;
-    top: 12px;
-    left: 12px;
-    z-index: 300;
+    top: 15px;
+    left: 15px;
+    z-index: 2001 !important;
     background: var(--bg-card);
     border: 1.5px solid var(--border);
     border-radius: 10px;
@@ -245,7 +242,7 @@ ul, ol { list-style: none; }
   .sidebar-logo::before { content: 'B'; font-size: 26px; font-family: var(--font-display); font-style: italic; font-weight: 700; background: var(--grad-yellow); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; filter: drop-shadow(0 0 8px rgba(255,215,0,0.5)); }
 }
 
-.nav-items { flex: 1 1 auto; display: flex; flex-direction: column; gap: 4px; padding: 0 12px 20px 12px; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; scrollbar-color: rgba(255,215,0,0.3) transparent; }
+.nav-items { flex: 1 1 auto; display: flex; flex-direction: column; gap: 4px; padding: 0 12px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(255,215,0,0.3) transparent; }
 .nav-item {
   display: flex; align-items: center; gap: 14px;
   padding: 12px 14px; border-radius: var(--radius-md);
@@ -265,10 +262,11 @@ ul, ol { list-style: none; }
 @media (min-width: 641px) and (max-width: 1024px) { .nav-badge { right: 4px; top: 4px; width: 14px; height: 14px; font-size: 8px; } }
 
 .sidebar-user {
-  padding: 12px; border-top: 1px solid var(--border);
+  padding: 15px; border-top: 1px solid var(--border);
   display: flex; align-items: center; gap: 10px;
   cursor: pointer; border-radius: var(--radius-md);
-  margin: 8px 12px 4px;
+  flex-shrink:0;
+  margin-top:auto;
   transition: background var(--transition);
   background: #f4f6fb; border: 1.5px solid var(--border);
 }
