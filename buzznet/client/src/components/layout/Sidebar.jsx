@@ -114,7 +114,7 @@ export default function Sidebar() {
                 )}
               </div>
               <span className="nav-label">Requests
-                <br /><p style={{ fontSize: 13, color:'dodgerblue', fontWeight: 400, margin: 0 }}>
+                <p style={{ fontSize: 13, color:'dodgerblue', fontWeight: 400, margin: 0 }}>
                   follow req. for private users
                 </p>
               </span>
