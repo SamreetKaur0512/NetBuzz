@@ -138,14 +138,15 @@ ul, ol { list-style: none; }
 }
 .nav-label p{
   display:block !important;
-  font-size:-2px !important;
+  font-size:10.5px !important;
   color:dodgerblue !important;
-  margin :2px 0 0 0 0 !important;
+  margin :1px 0 0 0 0 !important;
   white-space:normal !important;
   line-height:1 !important;
   margin-top:-2px !important;
   width :100% !important;
   opacity: 0.9;
+  height: auto !important;
 }
 
 /* Chrome/Safari scrollbar styling */
@@ -265,7 +266,7 @@ ul, ol { list-style: none; }
   font-family: var(--font-heading);
   margin: 0 !important;
   align-items:flex-start;
-  overflow:visible;
+  overflow:visible !important;
   transition: all var(--transition); cursor: pointer; white-space: nowrap;
   position: relative; border: 1.5px solid transparent; overflow: hidden;
 }
@@ -276,6 +277,7 @@ ul, ol { list-style: none; }
   line-height:1.2 !important;
   padding-left:5px;
   width:100%;
+  min-height: auto !important;
 }
 .nav-item[title="Log out"] { margin-top: 15px; margin-bottom: 20px; }
 .nav-item:hover { background: #f0f2f8; color: #1a1d2e; border-color: var(--border); transform: translateX(3px); }
