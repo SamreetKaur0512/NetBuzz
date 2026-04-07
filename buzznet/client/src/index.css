@@ -133,8 +133,7 @@ ul, ol { list-style: none; }
   background: var(--grad-sidebar);
   border-right: 2px solid var(--border);
   z-index: 1000;
-  overflow-y :auto !important;
-  overflow-x:hidden;
+  overflow:hidden !important;
  /* Firefox */
 }
 .nav-label p{
@@ -144,7 +143,7 @@ ul, ol { list-style: none; }
   margin :2px 0 0 0 0 !important;
   white-space:normal !important;
   line-height:1.2;
-  margin-top:2px;
+  margin-top:2px !important;
   width :100% !important;
   opacity: 0.9;
 }
@@ -254,16 +253,19 @@ ul, ol { list-style: none; }
   .sidebar-logo::before { content: 'B'; font-size: 26px; font-family: var(--font-display); font-style: italic; font-weight: 700; background: var(--grad-yellow); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; filter: drop-shadow(0 0 8px rgba(255,215,0,0.5)); }
 }
 
-.nav-items { display: flex; flex-direction: column; gap: 12px !important;height :100%; overflow-y:auto !important ;scrollbar-color: rgba(255,215,0,0.3) transparent; }
+.nav-items { display: flex; flex-direction: column; gap: 12px !important;height :auto; overflow:visible !important ;padding-bottom:20px !important;scrollbar-color: rgba(255,215,0,0.3) transparent; }
 .nav-item {
   white-space:nowrap !important;
   width:100%;
-  height:45px;
+  min-height: 48px;
+  height:auto;
   display: flex; align-items: center; gap: 14px;
-  padding: 12px 15px !important; border-radius:12px;
+  padding: 10px 15px !important; border-radius:12px;
   color: #5a6180; font-size: 14px; font-weight: 600;
   font-family: var(--font-heading);
   margin:2px 0;
+  align-items:flex-start;
+  overflow:visible;
   transition: all var(--transition); cursor: pointer; white-space: nowrap;
   position: relative; border: 1.5px solid transparent; overflow: hidden;
 }
