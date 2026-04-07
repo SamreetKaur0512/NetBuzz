@@ -227,9 +227,9 @@ ul, ol { list-style: none; }
 .sidebar::before { content: ''; display: block; width: 100%; height: 3px; background: var(--grad-hero); flex-shrink: 0; }
 
 .sidebar-logo {
-  padding: 20px 20px 28px 70px;
+  padding: 30px 20px;
   font-family: var(--font-display);
-  font-size: 28px; font-style: italic; font-weight: 700;
+  font-size: 24px; font-style: italic; font-weight: 700;
   letter-spacing: -0.5px; white-space: nowrap; overflow: hidden;
   background: var(--grad-hero);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
@@ -243,15 +243,17 @@ ul, ol { list-style: none; }
   .sidebar-logo::before { content: 'B'; font-size: 26px; font-family: var(--font-display); font-style: italic; font-weight: 700; background: var(--grad-yellow); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; filter: drop-shadow(0 0 8px rgba(255,215,0,0.5)); }
 }
 
-.nav-items { display: flex; flex-direction: column; gap: 4px; padding: 10px 12px; overflow-y:auto;padding-bottom:120;scrollbar-color: rgba(255,215,0,0.3) transparent; }
+.nav-items { display: flex; flex-direction: column; gap: 12px !important;height :100%; padding: 20px 15px; overflow-y:auto !important ;padding-bottom:150px;scrollbar-color: rgba(255,215,0,0.3) transparent; }
 .nav-item {
   display: flex; align-items: center; gap: 14px;
-  padding: 12px 14px; border-radius: var(--radius-md);
+  padding: 12px 18px !important; border-radius:12px;
   color: #5a6180; font-size: 14px; font-weight: 600;
   font-family: var(--font-heading);
+  margin:2px 0;
   transition: all var(--transition); cursor: pointer; white-space: nowrap;
   position: relative; border: 1.5px solid transparent; overflow: hidden;
 }
+.nav-item[title="Log out"] { margin-top: 15px; margin-bottom: 20px; }
 .nav-item:hover { background: #f0f2f8; color: #1a1d2e; border-color: var(--border); transform: translateX(3px); }
 .nav-item.active { background: linear-gradient(135deg, rgba(255,215,0,0.18), rgba(247,163,37,0.10)); color: #b87200; border-color: rgba(255,200,0,0.4); box-shadow: 0 2px 12px rgba(255,215,0,0.15); }
 .nav-item.active::after { content: ''; position: absolute; left: 0; top: 15%; bottom: 15%; width: 3px; background: var(--grad-yellow); border-radius: 0 3px 3px 0; box-shadow: 0 0 8px var(--yellow); }
@@ -264,7 +266,7 @@ ul, ol { list-style: none; }
 
 
 .sidebar-user {
-  padding: 15px; 
+  padding: 18px !important; 
   border-top: 1px solid var(--border);
   display: flex; 
   align-items: center; 
@@ -275,7 +277,7 @@ ul, ol { list-style: none; }
   
   /* --- CHANGES YAHAN HAIN --- */
   position: static !important;   /* Relative/Fixed hata kar Static kiya */
-  margin-top: 20px;             /* Auto ki jagah fix margin taaki upar wale items ke niche rahe */
+  margin-top: 30px !important;             /* Auto ki jagah fix margin taaki upar wale items ke niche rahe */
   margin-bottom: 10px;          /* Zyada bada margin yahan se hata dein */
   
   transition: background var(--transition);
