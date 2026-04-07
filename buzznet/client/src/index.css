@@ -110,28 +110,43 @@ ul, ol { list-style: none; }
   position: relative;
 }
 
-.app-main { 
-  flex: 1; 
-  display:flex;
-  flex-direction:column;
-  width: 100%; 
-  padding: 20px; 
-  transition: all var(--transition); 
+.app-main {
+  flex: 1;
+  /* Sidebar ki width minus karke bachi hui poori width lega */
+  width: calc(100% - var(--nav-width)); 
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  transition: all var(--transition);
+  position: relative;
 }
-
 .sidebar {
-  position: fixed; left: 0; top: 0;
-  width: var(--nav-width); height: 100vh;
+  width: var(--nav-width);
+  height: 100vh; 
+  position: sticky; 
+  top: 0;
+  left: 0;
+  flex-shrink: 0; 
+  display: flex;
+  flex-direction: column;
   background: var(--grad-sidebar);
   border-right: 2px solid var(--border);
-  display: flex; flex-direction: column;
-  padding: 0 0 16px;
-  z-index: 100;
-  transition: width var(--transition);
-  overflow-y: auto;
+  z-index: 1000;
+
+  /* ─── SCROLL FIX ─── */
+  overflow-y: auto; 
   overflow-x: hidden;
-  box-shadow: 4px 0 20px rgba(30,35,64,0.08);
+  scrollbar-width: thin; /* Firefox */
 }
+
+/* Chrome/Safari scrollbar styling */
+.sidebar::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+/* Chrome/Safari scrollbar styling */
+.sidebar::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
 
 /* Tablet: Icons only */
 @media (max-width: 1024px) and (min-width: 641px) {
