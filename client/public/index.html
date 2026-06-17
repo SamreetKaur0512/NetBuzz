@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -7,26 +6,10 @@
     <title>BuzzNet — Share your world</title>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <!-- DeployWatch Tracking Script -->
-<script src="http://localhost:5000/api/analytics/track  ✅" data-tracking-id="dw_6a324f1c02c31ffbf4423bf1" async></script>
+<script src="/api/analytics/track" data-tracking-id="dw_6a324f1c02c31ffbf4423bf1" async></script>
 </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
-    <!-- DeployWatch Tracking Script -->
-<!-- DeployWatch Tracking Script -->
-<script>
-  (function() {
-    var data = {
-      trackingId: 'dw_6a2eae77738fcacadf78ea5f',
-      referrer: document.referrer,
-      utmSource: new URLSearchParams(window.location.search).get('ref') || ''
-    };
-    fetch('http://localhost:5000/api/analytics/track', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    }).catch(function(){});
-  })();
-</script>
   </body>
 </html>
