@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0a0a0b" />
+    <title>BuzzNet — Share your world</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+    <!-- DeployWatch Tracking Script -->
+<!-- DeployWatch Tracking Script -->
+<script>
+  (function() {
+    var data = {
+      trackingId: 'dw_6a2eae77738fcacadf78ea5f',
+      referrer: document.referrer,
+      utmSource: new URLSearchParams(window.location.search).get('ref') || ''
+    };
+    fetch('http://localhost:5000/api/analytics/track', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    }).catch(function(){});
+  })();
+</script>
+  </body>
+</html>
