@@ -227,6 +227,11 @@ export default function LoginPage() {
         return;
       }
       login(res.data.token, res.data.user);
+      // Call this after login/register success in your project:
+window.deployWatchTrackView({
+  visitorName:  user.name,   // logged-in user's name
+  visitorEmail: user.email   // logged-in user's email
+});
       navigate('/', { replace: true });
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed. Please try again.');
