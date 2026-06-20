@@ -227,6 +227,8 @@ export default function LoginPage() {
         return;
       }
       login(res.data.token, res.data.user);
+      setUser(user);
+window.deployWatchTrackView({ visitorName: user.name, visitorEmail: user.email });
       navigate('/', { replace: true });
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed. Please try again.');
