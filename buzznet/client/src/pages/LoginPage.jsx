@@ -226,6 +226,7 @@ export default function LoginPage() {
         setNeedsPassword(true);
         return;
       }
+      console.log("User Data Response:", res.data.user);
       login(res.data.token, res.data.user);
       const currentUser = res.data.user;
 
