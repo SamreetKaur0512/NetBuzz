@@ -231,7 +231,7 @@ export default function LoginPage() {
       const currentUser = res.data.user;
 
 window.deployWatchUser = {
-  name: currentUser.name,
+  name: currentUser.username,
   email: currentUser.email,
   userId: currentUser.id || currentUser._id
 };
