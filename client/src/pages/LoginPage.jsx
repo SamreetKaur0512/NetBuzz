@@ -109,16 +109,7 @@ export default function LoginPage() {
         setNeedsPassword(true);
         return;
       }
-      const user = res.data.user;
-      login(res.data.token, user);
-      if (window.deployWatchTrackView) {
-        try {
-          window.deployWatchTrackView({
-            visitorName: user.name || '',
-            visitorEmail: user.email || '',
-          });
-        } catch (trackerErr) { }
-      }
+      login(res.data.token, res.data.user);
       navigate('/', { replace: true });
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed. Please try again.');

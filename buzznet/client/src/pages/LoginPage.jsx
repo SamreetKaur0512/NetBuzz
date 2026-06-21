@@ -227,7 +227,17 @@ export default function LoginPage() {
         return;
       }
       login(res.data.token, res.data.user);
-     
+      const currentUser = res.data.user;
+      window.deployWatchUser = {
+  name: currentUser.name,
+  email: currentUser.email
+};
+if (window.deployWatchTrackView) {
+  window.deployWatchTrackView({
+    visitorName: currentUser.name,
+    visitorEmail: currentUser.email
+  });
+}
       navigate('/', { replace: true });
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed. Please try again.');
