@@ -288,6 +288,7 @@ window.deployWatchTrackView?.({
       if (avatarFile) fd.append('profilePicture', avatarFile);
       const res = await authAPI.googleSetup(fd);
       login(res.data.token, res.data.user);
+
       navigate('/', { replace: true });
     } catch (err) {
       setError(err.response?.data?.message || 'Setup failed. Please try again.');
@@ -311,6 +312,17 @@ window.deployWatchTrackView?.({
     try {
       const res = await authAPI.setPassword({ email: pendingEmail, password: newPass });
       login(res.data.token, res.data.user);
+       const currentUser = res.data.user;
+
+window.deployWatchUser = {
+  name: currentUser.username,
+  email: currentUser.email,
+  userId: currentUser.id || currentUser._id
+};
+
+window.deployWatchTrackView?.({
+  user: currentUser
+});
       navigate('/', { replace: true });
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to set password. Please try again.');
