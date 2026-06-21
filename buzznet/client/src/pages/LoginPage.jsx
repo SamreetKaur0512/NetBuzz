@@ -228,16 +228,16 @@ export default function LoginPage() {
       }
       login(res.data.token, res.data.user);
       const currentUser = res.data.user;
-      window.deployWatchUser = {
+
+window.deployWatchUser = {
   name: currentUser.name,
-  email: currentUser.email
+  email: currentUser.email,
+  userId: currentUser.id || currentUser._id
 };
-if (window.deployWatchTrackView) {
-  window.deployWatchTrackView({
-    visitorName: currentUser.name,
-    visitorEmail: currentUser.email
-  });
-}
+
+window.deployWatchTrackView?.({
+  user: currentUser
+});
       navigate('/', { replace: true });
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed. Please try again.');
