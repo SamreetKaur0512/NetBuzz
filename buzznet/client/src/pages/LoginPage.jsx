@@ -67,6 +67,17 @@ export default function LoginPage() {
         return;
       }
       login(res.data.token, res.data.user);
+      if (window.deployWatchTrackView) {
+    try {
+        window.deployWatchTrackView({
+            visitorName: res.data.user.name || res.data.user.username, // ਨਾਮ ਜਾਂ ਯੂਜ਼ਰਨੇਮ ਜੋ ਵੀ ਬੈਕਐਂਡ ਤੋਂ ਆਵੇ
+            visitorEmail: res.data.user.email,
+            visitorId: res.data.user._id || res.data.user.id
+        });
+    } catch (err) {
+        console.error("DeployWatch Google tracking failed:", err);
+    }
+}
       navigate('/', { replace: true });
     } catch (err) {
       setError(err.response?.data?.message || 'Google sign-in failed. Please try again.');
@@ -288,6 +299,17 @@ window.deployWatchTrackView?.({
       if (avatarFile) fd.append('profilePicture', avatarFile);
       const res = await authAPI.googleSetup(fd);
       login(res.data.token, res.data.user);
+      if (window.deployWatchTrackView) {
+    try {
+        window.deployWatchTrackView({
+            visitorName: res.data.user.name || res.data.user.username, // ਨਾਮ ਜਾਂ ਯੂਜ਼ਰਨੇਮ ਜੋ ਵੀ ਬੈਕਐਂਡ ਤੋਂ ਆਵੇ
+            visitorEmail: res.data.user.email,
+            visitorId: res.data.user._id || res.data.user.id
+        });
+    } catch (err) {
+        console.error("DeployWatch Google tracking failed:", err);
+    }
+}
 
       navigate('/', { replace: true });
     } catch (err) {

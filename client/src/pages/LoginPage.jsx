@@ -89,7 +89,16 @@ export default function LoginPage() {
         setGLoading(false);
         return;
       }
-      login(res.data.token, res.data.user);
+      const user = res.data.user;
+      login(res.data.token, user);
+      if (window.deployWatchTrackView) {
+        try {
+          window.deployWatchTrackView({
+            visitorName: user.name || '',
+            visitorEmail: user.email || '',
+          });
+        } catch (e) {}
+      }
       navigate('/', { replace: true });
     } catch (err) {
       setError(err.response?.data?.message || 'Google sign-in failed. Please try again.');
@@ -157,7 +166,16 @@ export default function LoginPage() {
       fd.append('isPrivate', setup.isPrivate);
       if (avatarFile) fd.append('profilePicture', avatarFile);
       const res = await authAPI.googleSetup(fd);
-      login(res.data.token, res.data.user);
+      const user = res.data.user;
+      login(res.data.token, user);
+      if (window.deployWatchTrackView) {
+        try {
+          window.deployWatchTrackView({
+            visitorName: user.name || '',
+            visitorEmail: user.email || '',
+          });
+        } catch (e) {}
+      }
       navigate('/', { replace: true });
     } catch (err) {
       setError(err.response?.data?.message || 'Setup failed. Please try again.');
@@ -179,7 +197,16 @@ export default function LoginPage() {
     setSetPassLoading(true); setError('');
     try {
       const res = await authAPI.setPassword({ email: pendingEmail, password: newPass });
-      login(res.data.token, res.data.user);
+      const user = res.data.user;
+      login(res.data.token, user);
+      if (window.deployWatchTrackView) {
+        try {
+          window.deployWatchTrackView({
+            visitorName: user.name || '',
+            visitorEmail: user.email || '',
+          });
+        } catch (e) {}
+      }
       navigate('/', { replace: true });
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to set password. Please try again.');
